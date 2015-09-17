@@ -136,7 +136,8 @@ class PHPID extends PHPCD
         }
 
         $childs[] = $child;
-        file_put_contents($index_file, json_encode($childs));
+
+        $this->saveChilds($index_file, $childs);
     }
 
     private function updateInterfaceIndex($interface, $implementation)
@@ -149,6 +150,13 @@ class PHPID extends PHPCD
         }
 
         $childs[] = $implementation;
+
+        $this->saveChilds($index_file, $childs);
+    }
+
+    private function saveChilds($index_file, $childs)
+    {
+        $childs = array_unique($childs);
         file_put_contents($index_file, json_encode($childs));
     }
 
