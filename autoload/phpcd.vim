@@ -789,7 +789,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 			let i += 1
 		endwhile " }}}
-	elseif a:context =~? '(\s*new\s\+'.class_name_pattern.'\s*)->' " {{{
+	elseif a:context =~? '(\s*new\s\+'.class_name_pattern.'\s*([^)]*)\?)->' " {{{
 		let classname_candidate = matchstr(a:context, '\cnew\s\+\zs'.class_name_pattern.'\ze')
 		if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
 			let i = 1
@@ -1131,28 +1131,28 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 endfunction
 " }}}
 
-function! phpcd#GetCurrentClassName()
+function! phpcd#GetCurrentClassName() " {{{
 	let [start_line, start_col] = searchpos('class', 'n')
 	let [current_namespace, imports] = phpcd#GetCurrentNameSpace(getline(0, start_line))
 	" 假设文件名就是类名，去掉 .php 后缀
 	let file_name = expand('%:t')[:-5]
 
 	return current_namespace . '\' . file_name
-endfunction
+endfunction " }}}
 
-function! phpcd#initAutocmd()
+function! phpcd#initAutocmd() " {{{
 	augroup phpcd
 		autocmd!
 		autocmd BufLeave,VimLeave *.php if g:phpcd_need_update > 0 | call phpcd#updateIndex() | endif
 		autocmd BufWritePost *.php let g:phpcd_need_update = 1
 	augroup END
-endfunction
+endfunction " }}}
 
-function! phpcd#updateIndex()
+function! phpcd#updateIndex() " {{{
 	let g:phpcd_need_update = 0
 	let classname = phpcd#GetCurrentClassName()
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
-endfunction
+endfunction " }}}
 
 function! phpcd#GetClassLocation(classname, namespace) " {{{
 	let full_classname = a:namespace . '\' . a:classname
