@@ -227,10 +227,10 @@ function! phpcd#JumpToDefinition(mode) " {{{
 		return
 	endif
 
-    silent! execute "e +". symbol_line . ' ' . symbol_file
-    silent! execute "normal! zt"
-    normal! zv
-    normal! zz
+	silent! execute "e +". symbol_line . ' ' . symbol_file
+	silent! execute "normal! zt"
+	normal! zv
+	normal! zz
 endfunction " }}}
 
 function! phpcd#GetCurrentSymbolWithContext() " {{{
@@ -889,6 +889,9 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 						let i += 1
 					endwhile
 				end " }}}
+				if classname_candidate[0] == '\'
+					return classname_candidate
+				endif
 				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 				break
 			endif " }}}
