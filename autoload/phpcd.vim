@@ -917,6 +917,19 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			" in-file lookup for Class::getInstance()
 			if line =~# '^\s*'.object.'\s*=&\?\s*'.class_name_pattern.'\s*::\s*getInstance' && !object_is_array " {{{
 				let classname_candidate = matchstr(line, object.'\s*=&\?\s*\zs'.class_name_pattern.'\ze\s*::\s*getInstance')
+				if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
+					let i = 1
+					while i < a:start_line
+						let line = getline(a:start_line - i)
+
+						if line =~? '\v^\s*(abstract\s+|final\s+)*\s*class\s'
+							let classname_candidate = matchstr(line, '\cclass\s\+\zs'.class_name_pattern.'\ze')
+							break
+						endif
+
+						let i += 1
+					endwhile
+				end " }}}
 				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 				break
 			endif " }}}
