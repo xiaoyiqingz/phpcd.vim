@@ -227,7 +227,13 @@ function! phpcd#JumpToDefinition(mode) " {{{
 		return
 	endif
 
-	silent! execute "e +". symbol_line . ' ' . symbol_file
+	if a:mode == 'normal'
+		let edit_cmd = "e +"
+	else
+		let edit_cmd = a:mode . " +"
+	endif
+
+	silent! execute edit_cmd . symbol_line . ' ' . symbol_file
 	silent! execute "normal! zt"
 	normal! zv
 	normal! zz
