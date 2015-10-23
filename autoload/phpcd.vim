@@ -277,6 +277,7 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 
 	let current_instruction = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
 	let context = substitute(current_instruction, '\s*[$a-zA-Z_0-9\x7f-\xff]*$', '', '')
+	let context = substitute(context, '\s\+', '', '')
 
 	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace(getline(0, line('.')))
 	let [symbol, symbol_namespace] = phpcd#ExpandClassName(word, current_namespace, current_imports)
