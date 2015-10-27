@@ -15,6 +15,10 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		return
 	endif " }}}
 
+	if phpcd#hasSyntaxError()
+		return
+	endif
+
 	if a:findstart " {{{
 		unlet! b:php_menu
 		" Check if we are inside of PHP markup
@@ -214,6 +218,10 @@ endfunction
 
 function! phpcd#JumpToDefinition(mode) " {{{
 	if g:phpcd_channel_id < 0
+		return
+	endif
+
+	if phpcd#hasSyntaxError()
 		return
 	endif
 
@@ -1172,6 +1180,14 @@ function! phpcd#initAutocmd() " {{{
 endfunction " }}}
 
 function! phpcd#updateIndex() " {{{
+	if g:phpid_channel_id < 0
+		return
+	endif " }}}
+
+	if phpcd#hasSyntaxError()
+		return
+	endif
+
 	let g:phpcd_need_update = 0
 	let classname = phpcd#GetCurrentClassName()
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
@@ -1734,5 +1750,16 @@ function! phpcd#getComposerRoot() " {{{
 	endwhile
 	return root
 endfunction " }}}
+
+function! phpcd#hasSyntaxError() " {{{
+	let path = expand('%:p')
+	" TODO php 可执行文件支持配置
+	let cmd = 'php -l ' . path . '|grep -v "No syntax errors"'
+	let error = system(cmd)
+	if (error != '')
+		echohl ErrorMsg | echo error | echohl None
+	endif
+	return error != ''
+endfunction! " }}}
 
 " vim: foldmethod=marker:noexpandtab:ts=4:sts=4:sw=4
