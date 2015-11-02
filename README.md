@@ -1,5 +1,7 @@
 [English](README_en.md)
 
+[![asciicast](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx.png)](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx)
+
 ## 简介
 
 PHPCD，全称 PHP Completion Daemon，译为 PHP 补全服务。PHPCD 实现了 Vim 的 omni
