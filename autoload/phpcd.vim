@@ -876,6 +876,11 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
 				endif
+				" in file lookup for function (Foo $foo)
+				if line =~# 'function\s\+(.*' . object
+					let classname_candidate = matchstr(line, class_name_pattern . '\ze\s\+' . object)
+					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
+				endif
 			endfor
 		endif " }}}
 
@@ -1182,7 +1187,7 @@ endfunction " }}}
 function! phpcd#updateIndex() " {{{
 	if g:phpid_channel_id < 0
 		return
-	endif " }}}
+	endif
 
 	if phpcd#hasSyntaxError()
 		return
