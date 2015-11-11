@@ -1,0 +1,15 @@
+{
+    "name": "lvht/phpcd",
+    "authors": [
+        {
+            "name": "吕海涛",
+            "email": "git@lvht.net"
+        }
+    ],
+    "require": {},
+    "autoload-dev": {
+        "classmap": [
+            "./bin"
+        ]
+    }
+}
