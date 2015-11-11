@@ -313,7 +313,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', classname, a:symbol)
 			return [path, line, 0]
 		endif " }}}
-	elseif a:symbol_context == 'new' || a:symbol_context =~ '^class ' " {{{
+	elseif a:symbol_context == 'new' || a:symbol_context =~ '\vimplements|extends'" {{{
 		if (has_key(a:current_imports, a:symbol))
 			let full_classname = a:current_imports[a:symbol]['name']
 		else
