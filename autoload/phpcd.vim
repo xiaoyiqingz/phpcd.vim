@@ -949,49 +949,6 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			end " }}}
 
-			" in-file lookup for Class::getInstance()
-			if line =~# '^\s*'.object.'\s*=&\?\s*'.class_name_pattern.'\s*::\s*getInstance' && !object_is_array " {{{
-				let classname_candidate = matchstr(line, object.'\s*=&\?\s*\zs'.class_name_pattern.'\ze\s*::\s*getInstance')
-				if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
-					let i = 1
-					while i < a:start_line
-						let line = getline(a:start_line - i)
-
-						if line =~? '\v^\s*(abstract\s+|final\s+)*\s*class\s'
-							let classname_candidate = matchstr(line, '\cclass\s\+\zs'.class_name_pattern.'\ze')
-							break
-						endif
-
-						let i += 1
-					endwhile
-				end " }}}
-				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
-				break
-			endif " }}}
-
-			" do in-file lookup for static method invocation of a built-in class, like: $d = DateTime::createFromFormat()
-			if line =~# '^\s*'.object.'\s*=&\?\s*'.class_name_pattern.'\s*::\s*$\?[a-zA-Z_0-9\x7f-\xff]\+' " {{{
-				let classname  = matchstr(line, '^\s*'.object.'\s*=&\?\s*\zs'.class_name_pattern.'\ze\s*::')
-				if has_key(a:imports, classname) && a:imports[classname].kind == 'c'
-					let classname = a:imports[classname].name
-				endif
-				if has_key(g:php_builtin_classes, tolower(classname))
-					let sub_methodstack = phpcd#GetMethodStack(matchstr(line, '^\s*'.object.'\s*=&\?\s*\s\+\zs.*'))
-					let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname, '\', {}, sub_methodstack)
-					return classname_candidate
-				else
-					" try to get the class name from the static method's docblock
-					let [classname, namespace_for_class] = phpcd#ExpandClassName(classname, a:current_namespace, a:imports)
-					let sub_methodstack = phpcd#GetMethodStack(matchstr(line, '^\s*'.object.'\s*=&\?\s*\s\+\zs.*'))
-					let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(
-						\ classname,
-						\ a:current_namespace,
-						\ a:imports,
-						\ sub_methodstack)
-					return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
-				endif
-			endif " }}}
-
 			" function declaration line
 			if line =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(' " {{{
 				let function_lines = join(reverse(copy(lines)), " ")
