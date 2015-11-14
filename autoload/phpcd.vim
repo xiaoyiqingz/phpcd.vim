@@ -324,9 +324,16 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		return [path, line, 0] " }}}
 	elseif a:symbol_context != '' " {{{
 		" try to find interface method's implementation
+		" or the subclass of abstract class
+		" the var 'interface' is the interface name
+		" or the abstract class name
 		let interface = phpcd#GetClassName(line('.'), a:symbol_context, a:symbol_namespace, a:current_imports)
+		let is_interface = 1
+		if a:symbol_context =~ '^abstract'
+			let is_interface = 0
+		endif
 		if interface != '' && g:phpid_channel_id >= 0
-			let impls = rpcrequest(g:phpid_channel_id, 'ls', interface, 1)
+			let impls = rpcrequest(g:phpid_channel_id, 'ls', interface, is_interface)
 			let impl = ''
 			if len(impls) == 1
 				let impl = impls[0]
@@ -796,6 +803,14 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 			if line =~? '\v^\s*interface\s'
 				let class_name = matchstr(line, '\cinterface\s\+\zs'.class_name_pattern.'\ze')
+
+				if class_name != ''
+					return a:current_namespace . '\' . class_name
+				endif
+			endif
+
+			if line =~? '\v^\s*abstract\s'
+				let class_name = matchstr(line, '\cabstract\s\+class\s\+\zs'.class_name_pattern.'\ze')
 
 				if class_name != ''
 					return a:current_namespace . '\' . class_name
