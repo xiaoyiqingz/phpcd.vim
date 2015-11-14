@@ -296,13 +296,6 @@ endfunction " }}}
 function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_imports) " {{{
 	let unknow_location = ['', '', '']
 
-	if a:symbol =~ '\\'
-		let symbol_parts = split(a:symbol, '\')
-		let search_symbol = symbol_parts[-1]
-	else
-		let search_symbol = a:symbol
-	endif
-
 	" are we looking for a method?
 	if a:symbol_context =~ '\(->\|::\)$' " {{{
 		" Get name of the class
@@ -355,7 +348,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			endif
 		endif " }}}
 	else " {{{
-		if a:symbol[0] >= 'A' && a:symbol[0] <= 'Z'
+		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
 			let full_classname = namespace . '\' . classname
 			let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname)
