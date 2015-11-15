@@ -4,43 +4,25 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	" we need to wait phpcd {{{
 	if g:phpcd_channel_id < 0
 		return
-	endif " }}}
+	endif
 
 	if phpcd#hasSyntaxError()
 		return
-	endif
+	endif " }}}
 
 	if a:findstart " {{{
 		unlet! b:php_menu
-		" Check if we are inside of PHP markup
-		let pos = getpos('.')
-		let phpbegin = searchpairpos('<?', '', '?>', 'bWn',
-				\ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string\\|comment"')
-		let phpend = searchpairpos('<?', '', '?>', 'Wn',
-				\ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string\\|comment"')
+		" locate the start of the word
+		let line = getline('.')
+		let start = col('.') - 1
+		let compl_begin = col('.') - 2
+		while start >= 0 && line[start - 1] =~ '[\\a-zA-Z_0-9\x7f-\xff$]'
+			let start -= 1
+		endwhile
+		let b:phpbegin = 1
+		let b:compl_context = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), 1)
 
-		if phpbegin == [0,0] && phpend == [0,0]
-			" We are outside of any PHP markup. Complete HTML
-			let htmlbegin = htmlcomplete#CompleteTags(1, '')
-			let cursor_col = pos[2]
-			let base = getline('.')[htmlbegin : cursor_col]
-			let b:php_menu = htmlcomplete#CompleteTags(0, base)
-			return htmlbegin
-		else
-			" locate the start of the word
-			let line = getline('.')
-			let start = col('.') - 1
-			let compl_begin = col('.') - 2
-			while start >= 0 && line[start - 1] =~ '[\\a-zA-Z_0-9\x7f-\xff$]'
-				let start -= 1
-			endwhile
-			let b:phpbegin = phpbegin
-			let b:compl_context = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
-
-			return start
-			" We can be also inside of phpString with HTML tags. Deal with
-			" it later (time, not lines).
-		endif
+		return start
 	endif " }}}
 
 	" If exists b:php_menu it means completion was already constructed {{{
