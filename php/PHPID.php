@@ -52,8 +52,10 @@ class PHPID extends PHPCD
 
     /**
      * 解析 autoload_classmap.php 生成类的继承关系和接口的实现关系
+     *
+     * @param bool $is_force 是否强制重新刷新索引
      */
-    public function index($is_force = null)
+    public function index($is_force = false)
     {
         if (is_dir($this->getIndexDir()) && !$is_force) {
             return;
@@ -198,6 +200,16 @@ class PHPID extends PHPCD
         }
     }
 
+    /**
+     * 获取接口实现类列表或者抽象类子类
+     *
+     * @param string $name 接口名或者抽象类名
+     * @param bool $is_interface 是否为接口，抽象类则传 true
+     *
+     * @return [
+     *   'full class name 1',
+     * ]
+     */
     public function ls($name, $is_interface = false)
     {
         $base_path = $is_interface ? $this->getIntefacesDir() : $this->getExtendsDir();

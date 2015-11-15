@@ -315,7 +315,15 @@ class PHPCD
         return "$modifier $static";
     }
 
-    private function location($class_name, $method_name = null)
+    /**
+     * 获取函数或者类成员方法的源代码位置（文件路径和行号）
+     *
+     * @param string $class_name 类名，传空值则表示函数
+     * @param string $method_name 函数名或者方法名
+     *
+     * @return [ path, line ]
+     */
+    public function location($class_name, $method_name = null)
     {
         if ($class_name) {
             return $this->locationClass($class_name, $method_name);
@@ -389,7 +397,13 @@ class PHPCD
         ];
     }
 
-    private function doc($class_name, $name)
+    /**
+     * 获取类成员方法、成员变量或者函数的注释块
+     *
+     * @param string $class_name 类名，传空值则表示第二个参数为函数名
+     * @param string $name 函数名或者成员名
+     */
+    public function doc($class_name, $name)
     {
         if ($class_name && $name) {
             list($path, $doc) = $this->docClass($class_name, $name);
@@ -410,7 +424,19 @@ class PHPCD
         return preg_replace('#\s*\/|/\s*#','', $doc);
     }
 
-    private function nsuse($path)
+    /**
+     * 获取 PHP 文件的名称空间和 use 列表
+     *
+     * @param string $path 文件路径
+     *
+     * @return [
+     *   'namespace' => 'ns',
+     *   'imports' => [
+     *     'alias1' => 'fqdn1',
+     *   ]
+     * ]
+     */
+    public function nsuse($path)
     {
         $file = new SplFileObject($path);
         $s = [
