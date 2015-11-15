@@ -290,7 +290,7 @@ class PHPCD
         return [
             'word' => $name,
             'abbr' => "$modifier $name (" . join(', ', $params) . ')',
-            'info' => preg_replace('#/?\*(\*|/)?#','', $method->getDocComment()),
+            'info' => $this->clearDoc($method->getDocComment()),
             'kind' => 'f',
             'icase' => 1,
         ];
