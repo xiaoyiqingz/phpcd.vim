@@ -1,6 +1,3 @@
-" Vim completion plugin
-" Maintainer:	吕海涛 ( vim AT lvht DOT net )
-
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -18,14 +15,14 @@ if root == '/'
 endif
 
 let autoload_file = root . '/vendor/autoload.php'
-let phpcd_path = expand('<sfile>:p:h:h') . '/bin/phpcd_main.php'
+let phpcd_path = expand('<sfile>:p:h:h') . '/php/phpcd_main.php'
 let g:phpcd_job_id = jobstart([
 			\ 'php',
 			\ phpcd_path,
 			\ $NVIM_LISTEN_ADDRESS,
 			\ autoload_file])
 
-let phpid_path = expand('<sfile>:p:h:h') . '/bin/phpid_main.php'
+let phpid_path = expand('<sfile>:p:h:h') . '/php/phpid_main.php'
 let class_map_file = root . '/vendor/composer/autoload_classmap.php'
 let g:phpid_job_id = jobstart(['php',
 			\ phpid_path,
