@@ -1,10 +1,3 @@
-" Vim completion script
-" Language:	PHP
-" Maintainer:	Mikolaj Machowski ( mikmach AT wp DOT pl )
-" Maintainer:	Shawn Biddle ( shawn AT shawnbiddle DOT com )
-" Maintainer:	Szabó Dávid ( complex857 AT gmail DOT com )
-" 维护人： 吕海涛 ( vim AT lvht DOT net )
-
 let g:phpcd_need_update = 0
 
 function! phpcd#CompletePHP(findstart, base) " {{{
@@ -109,8 +102,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	finally
 		silent! exec winnr.'resize '.winheight
 	endtry " }}}
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#CompleteDoc() " {{{
 	return [
@@ -165,8 +157,7 @@ function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
 	return rpcrequest(g:phpcd_channel_id, 'info', '', pattern)
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#CompleteVariable(base) " {{{
 	let res = []
@@ -211,8 +202,7 @@ function! phpcd#CompleteVariable(base) " {{{
 	endfor
 
 	return int_dict
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
 	if g:phpcd_channel_id < 0
@@ -415,8 +405,7 @@ function! phpcd#EvaluateModifiers(modifiers, required_modifiers, prohibited_modi
 		" anything that is not explicitly required or prohibited is allowed
 		return 1
 	endif
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetCurrentInstruction(line_number, col_number, phpbegin) " {{{
 	" locate the current instruction (up until the previous non comment or string ";" or php region start (<?php or <?) without newlines
@@ -720,8 +709,7 @@ function! phpcd#GetMethodStack(line) " {{{
 	endif
 
 	return methodstack
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetClassName(start_line, context, current_namespace, imports) " {{{
 	" Get class name
@@ -1109,8 +1097,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
 		endif " }}}
 	endif " }}}
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetCurrentClassName() " {{{
 	let [start_line, start_col] = searchpos('class', 'n')
@@ -1169,8 +1156,7 @@ function! phpcd#GetClassLocation(classname, namespace) " {{{
 	" Get class location from tags
 	let no_namespace_candidate = ''
 	return ''
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetFunctionLocation(function_name, namespace) " {{{
 	" builtin functions doesn't need explicit \ in front of them even in namespaces,
@@ -1178,8 +1164,7 @@ function! phpcd#GetFunctionLocation(function_name, namespace) " {{{
 	" do in-file lookup for function definition
 	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', '', a:function_name)
 	return path
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetDocBlock(sccontent, search) " {{{
 	let i = 0
@@ -1238,8 +1223,7 @@ function! phpcd#GetDocBlock(sccontent, search) " {{{
 		let i += 1
 	endwhile
 	return ''
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#ParseDocBlock(docblock) " {{{
 	let res = {
@@ -1295,8 +1279,7 @@ function! phpcd#ParseDocBlock(docblock) " {{{
 	endif
 
 	return res
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 	if a:docblock_type !~ '|'
@@ -1320,8 +1303,7 @@ function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 	" only primitive types found, return the first one
 	return types[0]
 
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetCurrentNameSpace(file_lines) " {{{
 	let original_window = winnr()
@@ -1414,8 +1396,7 @@ function! phpcd#GetCurrentNameSpace(file_lines) " {{{
 		let sorted_imports[name] = imports[name]
 	endfor
 	return [current_namespace, sorted_imports]
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#GetCurrentFunctionBoundaries() " {{{
 	let old_cursor_pos = [line('.'), col('.')]
@@ -1448,8 +1429,7 @@ function! phpcd#GetCurrentFunctionBoundaries() " {{{
 
 	call cursor(old_cursor_pos[0], old_cursor_pos[1])
 	return 0
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 	" if there's an imported class, just use that class's information
@@ -1493,8 +1473,7 @@ function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 		endif
 	endif
 	return [classname, namespace]
-endfunction
-" }}}
+endfunction " }}}
 
 function! phpcd#getComposerRoot() " {{{
 	let root = getcwd()

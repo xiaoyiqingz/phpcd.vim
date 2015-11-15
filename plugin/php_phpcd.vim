@@ -8,4 +8,4 @@ let g:phpid_channel_id = -1
 let &cpo = s:save_cpo
 unlet s:save_cpo
 
-" vim: foldmethod=marker:noexpandtab:ts=4:sts=4:sw=4
+" vim: foldmethod=marker:noexpandtab:ts=2:sts=2:sw=2
