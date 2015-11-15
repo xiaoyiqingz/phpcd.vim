@@ -19,8 +19,12 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		while start >= 0 && line[start - 1] =~ '[\\a-zA-Z_0-9\x7f-\xff$]'
 			let start -= 1
 		endwhile
-		let b:phpbegin = 1
-		let b:compl_context = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), 1)
+
+		" TODO 清理 phpbegin
+		let phpbegin = searchpairpos('<?', '', '?>', 'bWn',
+				\ 'synIDattr(synID(line("."), col("."), 0), "name") =~? "string\\|comment"')
+		let b:phpbegin = phpbegin
+		let b:compl_context = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
 
 		return start
 	endif " }}}
