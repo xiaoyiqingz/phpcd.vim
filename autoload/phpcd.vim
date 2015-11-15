@@ -1116,34 +1116,9 @@ function! phpcd#GetClassLocation(classname, namespace) " {{{
 	let full_classname = a:namespace . '\' . a:classname
 	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
 	return path
-
-	if a:namespace == '' || a:namespace == '\'
-		let search_namespace = '\'
-	else
-		let search_namespace = tolower(a:namespace)
-	endif
-
-	" do in-file lookup for class definition
-	let i = 1
-	while i < line('.')
-		let line = getline(line('.')-i)
-		if line =~? '^\s*\(abstract\s\+\|final\s\+\)*\s*\(class\|interface\|trait\)\s*'.a:classname.'\(\s\+\|$\|{\)' && tolower(current_namespace) == search_namespace
-			return expand('%:p')
-		else
-			let i += 1
-			continue
-		endif
-	endwhile
-
-	" Get class location from tags
-	let no_namespace_candidate = ''
-	return ''
 endfunction " }}}
 
 function! phpcd#GetFunctionLocation(function_name, namespace) " {{{
-	" builtin functions doesn't need explicit \ in front of them even in namespaces,
-	" aliased built-in function names are not handled
-	" do in-file lookup for function definition
 	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', '', a:function_name)
 	return path
 endfunction " }}}
