@@ -149,15 +149,15 @@ class PHPCD
         return call_user_func_array([$this, $method], $args);
     }
 
-    public function info ($class_name, $pattern) {
+    public function info ($class_name, $pattern, $mode) {
         if ($class_name) {
-            return $this->classInfo($class_name, $pattern);
+            return $this->classInfo($class_name, $pattern, $mode);
         } else {
             return $this->functionOrConstantInfo($pattern);
         }
     }
 
-    private function classInfo($class_name, $pattern)
+    private function classInfo($class_name, $pattern, $mode)
     {
         $reflection = new ReflectionClass($class_name);
         $items = [];
@@ -171,14 +171,25 @@ class PHPCD
             ];
         }
 
-        foreach ($reflection->getMethods() as $method) {
+        if ($mode == 1) {
+            $methods = $reflection->getMethods(ReflectionMethod::IS_STATIC);
+        } else {
+            $methods = $reflection->getMethods();
+        }
+        foreach ($methods as $method) {
             $info = $this->getMethodInfo($method, $pattern);
             if ($info) {
                 $items[] = $info;
             }
         }
 
-        foreach ($reflection->getProperties() as $property) {
+        if ($mode == 1) {
+            $properties = $reflection->getProperties(ReflectionProperty::IS_STATIC);
+        } else {
+            $properties = $reflection->getProperties();
+        }
+
+        foreach ($properties as $property) {
             $info = $this->getPropertyInfo($property, $pattern);
             if ($info) {
                 $items[] = $info;

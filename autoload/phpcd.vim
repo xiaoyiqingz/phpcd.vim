@@ -55,7 +55,11 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 
 		if context =~ '\(->\|::\)$' " {{{
 			let classname = phpcd#GetClassName(line('.'), context, current_namespace, imports)
-			return rpcrequest(g:phpcd_channel_id, 'info', classname, a:base)
+			let only_static = 0
+			if context =~ '::$'
+				let only_static = 1
+			endif
+			return rpcrequest(g:phpcd_channel_id, 'info', classname, a:base, only_static)
 		elseif context =~? 'implements'
 			" TODO complete class Foo implements
 		elseif context =~? 'extends\s\+.\+$' && a:base == ''
@@ -127,14 +131,6 @@ function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 	"  + extend keywords for predefined constants, DONE
 	"  + classes (after new), DONE
 	"  + limit choice after -> and :: to funcs and vars DONE
-
-	" Internal solution for finding functions in current file.
-
-	if a:base =~? '^\'
-		let leading_slash = '\'
-	else
-		let leading_slash = ''
-	endif
 
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
