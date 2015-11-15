@@ -607,71 +607,56 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 
 		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
 
-		let classlocation = phpcd#GetClassLocation(classname_candidate, class_candidate_namespace)
+		let full_classname = class_candidate_namespace . '\' . classname_candidate
+		let [method_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', full_classname, method)
 
-		if classlocation != '' && filereadable(classlocation) " {{{
-			" Read the next method from the stack and extract only the name
+		if doc_str != '' " {{{
+			let classstructure = rpcrequest(g:phpcd_channel_id, 'nsuse', method_path)
+			let docblock = phpcd#ParseDocBlock(doc_str)
+			if has_key(docblock.return, 'type') || has_key(docblock.var, 'type') " {{{
+				let type = has_key(docblock.return, 'type') ? docblock.return.type : docblock.var.type
 
-			let classcontents = phpcd#GetCachedClassContents(classlocation, classname_candidate)
-
-			" Get Structured information of all classes and subclasses including namespace and includes
-			" try to find the method's return type in docblock comment
-			for classstructure in classcontents
-				let docblock_target_pattern = 'function\s\+&\?'.method.'\|\(public\|private\|protected\|var\).\+\$'.method
-				let doc_str = phpcd#GetDocBlock(split(classstructure.content, '\n'), docblock_target_pattern)
-				if doc_str != ''
-					break
-				endif
-			endfor
-			if doc_str != ''
-				let docblock = phpcd#ParseDocBlock(doc_str)
-				if has_key(docblock.return, 'type') || has_key(docblock.var, 'type')
-					let type = has_key(docblock.return, 'type') ? docblock.return.type : docblock.var.type
-
-					" there's a namespace in the type, threat the type as FQCN
-					if type =~ '\\'
-						let parts = split(substitute(type, '^\\', '', ''), '\')
-						let class_candidate_namespace = join(parts[0:-2], '\')
-						let classname_candidate = parts[-1]
-						" check for renamed namepsace in imports
-						if has_key(classstructure.imports, class_candidate_namespace)
-							let class_candidate_namespace = classstructure.imports[class_candidate_namespace].name
-						endif
-					else
-						" no namespace in the type, threat it as a relative classname
-						let returnclass = type
-						if has_key(classstructure.imports, returnclass)
-							if has_key(classstructure.imports[returnclass], 'namespace')
-								let fullnamespace = classstructure.imports[returnclass].namespace
-							else
-								let fullnamespace = class_candidate_namespace
-							endif
+				" there's a namespace in the type, threat the type as FQCN
+				if type =~ '\\' " {{{
+					let parts = split(substitute(type, '^\\', '', ''), '\')
+					let class_candidate_namespace = join(parts[0:-2], '\')
+					let classname_candidate = parts[-1]
+					" check for renamed namepsace in imports
+					if has_key(classstructure.imports, class_candidate_namespace)
+						let class_candidate_namespace = classstructure.imports[class_candidate_namespace].name
+					endif " }}}
+				else " {{{
+					" no namespace in the type, threat it as a relative classname
+					let returnclass = type
+					if has_key(classstructure.imports, returnclass)
+						if has_key(classstructure.imports[returnclass], 'namespace')
+							let fullnamespace = classstructure.imports[returnclass].namespace
 						else
 							let fullnamespace = class_candidate_namespace
 						endif
-						" make @return self, static, $this the same way
-						" (not exactly what php means by these)
-						if returnclass == 'self' || returnclass == 'static' || returnclass == '$this' || returnclass == 'self[]' || returnclass == 'static[]' || returnclass == '$this[]'
-							if returnclass =~ '\[\]$'
-								let classname_candidate = a:classname_candidate.'[]'
-							else
-								let classname_candidate = a:classname_candidate
-							endif
-							let class_candidate_namespace = a:class_candidate_namespace
-						else
-							let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(returnclass, fullnamespace, a:imports)
-						endif
+					else
+						let fullnamespace = class_candidate_namespace
 					endif
+					" make @return self, static, $this the same way
+					" (not exactly what php means by these)
+					if returnclass == 'self' || returnclass == 'static' || returnclass == '$this' || returnclass == 'self[]' || returnclass == 'static[]' || returnclass == '$this[]'
+						if returnclass =~ '\[\]$'
+							let classname_candidate = a:classname_candidate.'[]'
+						else
+							let classname_candidate = a:classname_candidate
+						endif
+						let class_candidate_namespace = a:class_candidate_namespace
+					else
+						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(returnclass, fullnamespace, a:imports)
+					endif
+				endif " }}}
 
-					return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
-				endif
-			endif
-
-			return unknown_result " }}}
-		else " {{{
-			return unknown_result
+				return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
+			endif " }}}
 		endif " }}}
 	endif " }}}
+
+	return unknown_result
 endfunction " }}}
 
 function! phpcd#GetMethodStack(line) " {{{
