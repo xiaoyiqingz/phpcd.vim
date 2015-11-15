@@ -349,4 +349,92 @@ class PHPCD
             $func->getStartLine(),
         ];
     }
+
+    private function docClass($class_name, $name)
+    {
+        $class = new ReflectionClass($class_name);
+        if ($class->hasProperty($name)) {
+            $property = $class->getProperty($name);
+            return [
+                $class->getFileName(),
+                $property->getDocComment()
+            ];
+        } elseif ($class->hasMethod($name)) {
+            $method = $class->getMethod($name);
+            return [
+                $class->getFileName(),
+                $method->getDocComment()
+            ];
+        }
+    }
+
+    private function docFunction($name)
+    {
+        $function = new ReflectionFunction($name);
+
+        return [
+            $function->getFileName(),
+            $function->getDocComment()
+        ];
+    }
+
+    private function doc($class_name, $name)
+    {
+        if ($class_name && $name) {
+            list($path, $doc) = $this->docClass($class_name, $name);
+        } elseif ($name) {
+            list($path, $doc) = $this->docFunction($name);
+        }
+
+        if ($doc) {
+            return [$path, $this->clearDoc($doc)];
+        } else {
+            return [null, null];
+        }
+    }
+
+    private function clearDoc($doc)
+    {
+        $doc = preg_replace('/[ \t]*\* ?/m','', $doc);
+        return preg_replace('#\s*\/|/\s*#','', $doc);
+    }
+
+    private function nsuse($path)
+    {
+        $file = new SplFileObject($path);
+        $s = [
+            'namespace' => '',
+            'imports' => [
+            ],
+        ];
+        foreach ($file as $line) {
+            if (preg_match('/\b(class|interface|trait)\b/i', $line)) {
+                break;
+            }
+            $line = trim($line);
+            if (!$line) {
+                continue;
+            }
+            if (strtolower(substr($line, 0, 9)) == 'namespace') {
+                $namespace = substr($line, 10, -1);
+                $s['namespace'] = $namespace;
+            } elseif (strtolower(substr($line, 0, 3) == 'use')) {
+                $as_pos = strripos($line, ' as ');
+                if ($as_pos !== false) {
+                    $alias = trim(substr($line, $as_pos + 3, -1));
+                    $s['imports'][$alias] = trim(substr($line, 3, $as_pos - 3));
+                } else {
+                    $slash_pos = strripos($line, '\\');
+                    if ($slash_pos === false) {
+                        $alias = trim(substr($line, 4, -1));
+                    } else {
+                        $alias = trim(substr($line, $slash_pos + 1, -1));
+                    }
+                    $s['imports'][$alias] = trim(substr($line, 4, -1));
+                }
+            }
+        }
+
+        return $s;
+    }
 }

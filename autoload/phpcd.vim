@@ -832,18 +832,15 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate " }}}
 	elseif get(methodstack, 0) =~# function_invocation_pattern " {{{
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
-		let function_file = phpcd#GetFunctionLocation(function_name, a:current_namespace)
+		let [func_path, docblock_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', function_name)
+		let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', func_path)
 
-		if function_file != '' && filereadable(function_file)
-			let file_lines = readfile(function_file)
-			let docblock_str = phpcd#GetDocBlock(file_lines, 'function\s*&\?\<'.function_name.'\>')
+		if docblock_str != ''
 			let docblock = phpcd#ParseDocBlock(docblock_str)
 
 			if has_key(docblock.return, 'type')
 				let classname_candidate = docblock.return.type
-				let [class_candidate_namespace, function_imports] = phpcd#GetCurrentNameSpace(file_lines)
-				" try to expand the classname of the returned type with the context got from the function's source file
-				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, function_imports)
+				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, nsuse.namespace, nsuse.imports)
 			endif
 		endif
 
