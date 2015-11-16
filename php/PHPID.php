@@ -14,6 +14,7 @@ class PHPID extends PHPCD
     }
     protected function setChannelId()
     {
+        $this->setChannelId0();
     }
 
     protected function setChannelId0()

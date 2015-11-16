@@ -4,10 +4,6 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	" we need to wait phpcd {{{
 	if g:phpcd_channel_id < 0
 		return
-	endif
-
-	if phpcd#hasSyntaxError()
-		return
 	endif " }}}
 
 	if a:findstart " {{{
@@ -188,10 +184,6 @@ endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
 	if g:phpcd_channel_id < 0
-		return
-	endif
-
-	if phpcd#hasSyntaxError()
 		return
 	endif
 
@@ -1103,10 +1095,6 @@ function! phpcd#updateIndex() " {{{
 		return
 	endif
 
-	if phpcd#hasSyntaxError()
-		return
-	endif
-
 	let g:phpcd_need_update = 0
 	let classname = phpcd#GetCurrentClassName()
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
@@ -1442,16 +1430,5 @@ function! phpcd#getComposerRoot() " {{{
 	endwhile
 	return root
 endfunction " }}}
-
-function! phpcd#hasSyntaxError() " {{{
-	let path = expand('%:p')
-	" TODO php 可执行文件支持配置
-	let cmd = 'php -l ' . path . '|grep -v "No syntax errors"'
-	let error = system(cmd)
-	if (error != '')
-		echohl ErrorMsg | echo error | echohl None
-	endif
-	return error != ''
-endfunction! " }}}
 
 " vim: foldmethod=marker:noexpandtab:ts=2:sts=2:sw=2

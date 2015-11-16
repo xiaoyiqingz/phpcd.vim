@@ -11,22 +11,47 @@ class PHPCD
     /** @var MessagePackUnpacker $unpacker **/
     private $unpacker;
 
+    private $current_rpc_method = null;
+    private $current_rpc_msgid = null;
+    private $current_rpc_args = null;
+
+    /**
+     * PHPCD 的 RPC 方法遇到 PHP Fatal Error 时的返回值
+     */
+    protected $fatal_error_return = [
+        'info' => [],
+        'location' => [null, null],
+        'doc' => [null, null],
+        'ls' => [],
+        'nsuse' => [
+            'namespace' => '',
+            'imports' => [],
+        ],
+    ];
+
     /**
      * @param string $socket_path 套接字路径
      * @param string $autoload_path PHP 项目自动加载脚本
      */
     public function __construct($socket_path, $autoload_path = null)
     {
-        $this->socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
         $this->unpacker = new MessagePackUnpacker();
 
         if ($autoload_path) {
             require $autoload_path;
         }
 
-        socket_connect($this->socket, $socket_path);
+        $this->socket_path = $socket_path;
 
-        $this->setChannelId();
+        $this->connect();
+    }
+
+    private function connect()
+    {
+        $this->socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+        socket_connect($this->socket, $this->socket_path);
+
+        static::setChannelId();
     }
 
     protected function getChannelId()
@@ -37,7 +62,9 @@ class PHPCD
 
     protected function setChannelId()
     {
-        $command = 'let g:phpcd_channel_id = ' . $this->getChannelId();
+        $channel_id = $this->getChannelId();
+        echo "got channel $channel_id\n";
+        $command = 'let g:phpcd_channel_id = ' . $channel_id;
         $this->callRpc('vim_command',  $command);
     }
 
@@ -82,6 +109,7 @@ class PHPCD
 
     public function loop()
     {
+        register_shutdown_function([$this, 'shutdown']);
         foreach ($this->nextRpcMsg() as $msg) {
             echo json_encode($msg) . PHP_EOL;
             $pid = pcntl_fork();
@@ -89,11 +117,35 @@ class PHPCD
                 die('could not fork');
             } elseif ($pid) {
                 pcntl_wait($status);
+                // 子进程异常退出的时候 NeoVim 会关闭套接字
+                // 主进程需要重新建立连接
+                if ($status > 0) {
+                    $this->connect();
+                }
             } else {
                 $this->on($msg);
                 exit;
             }
         }
+    }
+
+    public function shutdown()
+    {
+        if (!$this->current_rpc_msgid) {
+            return;
+        }
+
+        // 在 NeoVim 提示错误
+        $error = error_get_last();
+        $command = 'echo "'
+            . $error['message']
+            . ' in ' . $error['file'] . ' +' . $error['line'] . '"';
+        $this->callRpc('vim_command',  $command);
+
+        // 返回各个业务方法的空结果
+        // 防止 NeoVim 死等
+        $result = @$this->fatal_error_return[$this->current_rpc_method];
+        $this->sendResp($result, $this->current_rpc_msgid, null);
     }
 
     private function on($msg)
@@ -108,15 +160,22 @@ class PHPCD
         }
 
         $result = null;
-        $error = null;
+
+        $this->current_rpc_method = $method;
+        $this->current_rpc_msgid = $msg_id;
+        $this->current_rpc_args = $args;
         try {
             $result = $this->onCall($method, $args);
         } catch (Exception $e) {
-            $error = true;
+            echo $e->getTraceAsString();
+        } finally {
+            $this->current_rpc_method = null;
+            $this->current_rpc_msgid = null;
+            $this->current_rpc_args = null;
         }
 
         if (count($msg) == 4) {
-            $this->sendResp($result, $msg_id, $error);
+            $this->sendResp($result, $msg_id, null);
         }
     }
 
@@ -149,7 +208,7 @@ class PHPCD
         return call_user_func_array([$this, $method], $args);
     }
 
-    public function info ($class_name, $pattern, $mode) {
+    public function info($class_name, $pattern, $mode) {
         if ($class_name) {
             return $this->classInfo($class_name, $pattern, $mode);
         } else {
