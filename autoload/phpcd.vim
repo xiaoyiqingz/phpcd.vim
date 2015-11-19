@@ -325,32 +325,10 @@ function! s:getNextCharWithPos(filelines, current_pos) " {{{
 	return [[line_no, col_no], a:filelines[line_no][col_no]]
 endfunction " }}}
 
-function! phpcd#EvaluateModifiers(modifiers, required_modifiers, prohibited_modifiers) " {{{
-	" if theres no modifier, and no modifier is allowed and no modifier is required
-	if len(a:modifiers) == 0 && len(a:required_modifiers) == 0
-		return 1
-	else
-		" check if every requred modifier is present
-		for required_modifier in a:required_modifiers
-			if index(a:modifiers, required_modifier) == -1
-				return 0
-			endif
-		endfor
-
-		for modifier in a:modifiers
-			" if the modifier is prohibited its a no match
-			if index(a:prohibited_modifiers, modifier) != -1
-				return 0
-			endif
-		endfor
-
-		" anything that is not explicitly required or prohibited is allowed
-		return 1
-	endif
-endfunction " }}}
-
 function! phpcd#GetCurrentInstruction(line_number, col_number, phpbegin) " {{{
-	" locate the current instruction (up until the previous non comment or string ";" or php region start (<?php or <?) without newlines
+	" locate the current instruction
+	" up until the previous non comment or string ";"
+	" or php region start (<?php or <?) without newlines
 	let col_number = a:col_number
 	let line_number = a:line_number
 	let line = getline(a:line_number)
