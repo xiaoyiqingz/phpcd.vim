@@ -20,8 +20,8 @@ class PHPCD
      */
     protected $fatal_error_return = [
         'info' => [],
-        'location' => [null, null],
-        'doc' => [null, null],
+        'location' => ['', ''],
+        'doc' => ['', ''],
         'ls' => [],
         'nsuse' => [
             'namespace' => '',
@@ -430,6 +430,10 @@ class PHPCD
 
     private function docClass($class_name, $name)
     {
+        if (!class_exists($class_name)) {
+            return ['', ''];
+        }
+
         $class = new ReflectionClass($class_name);
         if ($class->hasProperty($name)) {
             $property = $class->getProperty($name);
@@ -448,6 +452,10 @@ class PHPCD
 
     private function docFunction($name)
     {
+        if (!function_exists($name)) {
+            return ['', ''];
+        }
+
         $function = new ReflectionFunction($name);
 
         return [

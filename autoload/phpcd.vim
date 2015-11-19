@@ -1,5 +1,3 @@
-let g:phpcd_need_update = 0
-
 function! phpcd#CompletePHP(findstart, base) " {{{
 	" we need to wait phpcd {{{
 	if g:phpcd_channel_id < 0
@@ -92,33 +90,11 @@ endfunction " }}}
 
 function! phpcd#CompleteDoc() " {{{
 	return [
-				\ 'api',
-				\ 'author',
-				\ 'category',
-				\ 'copyright',
-				\ 'deprecated',
-				\ 'example',
-				\ 'filesource',
-				\ 'global',
-				\ 'ignore',
-				\ 'internal',
-				\ 'license',
-				\ 'link',
-				\ 'method',
-				\ 'package',
-				\ 'param',
-				\ 'property',
-				\ 'property-read',
-				\ 'property-write',
-				\ 'return',
-				\ 'see',
-				\ 'since',
-				\ 'source',
-				\ 'subpackage',
-				\ 'throws',
-				\ 'todo',
-				\ 'uses',
-				\ 'var',
+				\ 'api', 'author', 'category', 'copyright', 'deprecated',
+				\ 'example', 'filesource', 'global', 'ignore', 'internal',
+				\ 'license', 'link', 'method', 'package', 'param', 'property',
+				\ 'property-read', 'property-write', 'return', 'see', 'since',
+				\ 'source', 'subpackage', 'throws', 'todo', 'uses', 'var',
 				\ 'version'
 				\]
 endfunction " }}}
@@ -1009,23 +985,25 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let function_name = matchstr(function_name, '^\zs.\+\ze\s*($') " strip the trailing (
 				let [function_name, function_namespace] = phpcd#ExpandClassName(function_name, a:current_namespace, a:imports)
 
-				let function_file = phpcd#GetFunctionLocation(function_name, function_namespace)
-				if function_file == ''
-					let function_file = phpcd#GetFunctionLocation(function_name, '\')
+				let full_funcname = function_namespace . '\' .function_name
+				let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
+				echomsg string([func_path, doc_str])
+				if doc_str == ''
+					let full_funcname = '\' .function_name
+					let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
 				endif
 
-				if function_file != '' && filereadable(function_file)
-					let file_lines = readfile(function_file)
-					let docblock_str = phpcd#GetDocBlock(file_lines, 'function\s*&\?\<'.function_name.'\>')
-					let docblock = phpcd#ParseDocBlock(docblock_str)
+				if doc_str != '' " {{{
+					" namespace and use import of the function source
+					let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', func_path)
+					let docblock = phpcd#ParseDocBlock(doc_str)
 					if has_key(docblock.return, 'type')
 						let classname_candidate = docblock.return.type
-						let [class_candidate_namespace, function_imports] = phpcd#GetCurrentNameSpace(file_lines)
 						" try to expand the classname of the returned type with the context got from the function's source file
-						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, function_imports)
+						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, nsuse.namespace, nsuse.imports)
 						break
 					endif
-				endif
+				endif " }}}
 			endif " }}}
 
 			" foreach with the variable in question
@@ -1106,11 +1084,6 @@ endfunction " }}}
 function! phpcd#GetClassLocation(classname, namespace) " {{{
 	let full_classname = a:namespace . '\' . a:classname
 	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
-	return path
-endfunction " }}}
-
-function! phpcd#GetFunctionLocation(function_name, namespace) " {{{
-	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', '', a:function_name)
 	return path
 endfunction " }}}
 
