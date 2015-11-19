@@ -100,14 +100,6 @@ function! phpcd#CompleteDoc() " {{{
 endfunction " }}}
 
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
-	" Complete everything
-	"  + functions,  DONE
-	"  + keywords of language DONE
-	"  + defines (constant definitions), DONE
-	"  + extend keywords for predefined constants, DONE
-	"  + classes (after new), DONE
-	"  + limit choice after -> and :: to funcs and vars DONE
-
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
 	return rpcrequest(g:phpcd_channel_id, 'info', '', pattern)
@@ -1079,12 +1071,6 @@ function! phpcd#updateIndex() " {{{
 	let g:phpcd_need_update = 0
 	let classname = phpcd#GetCurrentClassName()
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
-endfunction " }}}
-
-function! phpcd#GetClassLocation(classname, namespace) " {{{
-	let full_classname = a:namespace . '\' . a:classname
-	let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
-	return path
 endfunction " }}}
 
 function! phpcd#GetDocBlock(sccontent, search) " {{{
