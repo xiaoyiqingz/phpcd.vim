@@ -1010,6 +1010,9 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let [function_name, function_namespace] = phpcd#ExpandClassName(function_name, a:current_namespace, a:imports)
 
 				let function_file = phpcd#GetFunctionLocation(function_name, function_namespace)
+				if function_file == ''
+					let function_file = phpcd#GetFunctionLocation(function_name, '\')
+				endif
 
 				if function_file != '' && filereadable(function_file)
 					let file_lines = readfile(function_file)
@@ -1019,7 +1022,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 						let classname_candidate = docblock.return.type
 						let [class_candidate_namespace, function_imports] = phpcd#GetCurrentNameSpace(file_lines)
 						" try to expand the classname of the returned type with the context got from the function's source file
-						let [classname_candidate, unused] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, function_imports)
+						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, function_imports)
 						break
 					endif
 				endif
