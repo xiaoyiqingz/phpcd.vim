@@ -1330,9 +1330,9 @@ function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 
 	" try to find relative namespace in imports, imported names takes precedence over
 	" current namespace when resolving relative namespaced class names
-	if a:classname !~ '^\' && a:classname =~ '\\'
+	if stridx(a:classname, '\') > 0
 		let classname_parts = split(a:classname, '\\\+')
-		if has_key(a:imports, classname_parts[0]) && a:imports[classname_parts[0]].kind == 'n'
+		if has_key(a:imports, classname_parts[0])
 			let classname_parts[0] = a:imports[classname_parts[0]].name
 			let namespace = join(classname_parts[0:-2], '\')
 			let classname = classname_parts[-1]
