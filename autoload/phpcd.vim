@@ -524,7 +524,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 				let type = has_key(docblock.return, 'type') ? docblock.return.type : docblock.var.type
 
 				" there's a namespace in the type, threat the type as FQCN
-				if type =~ '\\' " {{{
+				if type[0] == '\\' " {{{
 					let parts = split(substitute(type, '^\\', '', ''), '\')
 					let class_candidate_namespace = join(parts[0:-2], '\')
 					let classname_candidate = parts[-1]
@@ -532,15 +532,17 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 					if has_key(classstructure.imports, class_candidate_namespace)
 						let class_candidate_namespace = classstructure.imports[class_candidate_namespace].name
 					endif " }}}
+				elseif type =~ '\\' " {{{
+					" TODO 相对名称空间引用
+					" 例如 use A; 给 A\B 补全和跳转
+					" }}}
 				else " {{{
 					" no namespace in the type, threat it as a relative classname
 					let returnclass = type
 					if has_key(classstructure.imports, returnclass)
-						if has_key(classstructure.imports[returnclass], 'namespace')
-							let fullnamespace = classstructure.imports[returnclass].namespace
-						else
-							let fullnamespace = class_candidate_namespace
-						endif
+						let full_classname = classstructure.imports[returnclass]
+						let parts = split(substitute(type, '^\\', '', ''), '\')
+						let fullnamespace = join(parts[0:-2], '\')
 					else
 						let fullnamespace = class_candidate_namespace
 					endif
