@@ -705,7 +705,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 			let i += 1
 		endwhile " }}}
-	elseif a:context =~? '(\s*new\s\+'.class_name_pattern.'\s*([^)]*)\?)->' " {{{
+	elseif a:context =~? '(\s*new\s\+'.class_name_pattern.'\s*\(([^)]*)\)\?)->' " {{{
 		let classname_candidate = matchstr(a:context, '\cnew\s\+\zs'.class_name_pattern.'\ze')
 		if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
 			let i = 1
