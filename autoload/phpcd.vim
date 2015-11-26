@@ -54,7 +54,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		if context =~ '\(->\|::\)$' " {{{
 			let classname = phpcd#GetClassName(line('.'), context, current_namespace, imports)
 			let only_static = 0
-			if context =~ '::$'
+			if stridx(context, 'parent') != 0 && strridx(context, '::') > 0
 				let only_static = 1
 			endif
 			return rpcrequest(g:phpcd_channel_id, 'info', classname, a:base, only_static)
