@@ -211,8 +211,10 @@ class PHPCD
     public function info($class_name, $pattern, $mode) {
         if ($class_name) {
             return $this->classInfo($class_name, $pattern, $mode);
-        } else {
+        } elseif($pattern) {
             return $this->functionOrConstantInfo($pattern);
+        } else {
+            return [];
         }
     }
 
