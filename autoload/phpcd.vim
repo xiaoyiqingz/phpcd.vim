@@ -524,7 +524,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 				let type = has_key(docblock.return, 'type') ? docblock.return.type : docblock.var.type
 
 				" there's a namespace in the type, threat the type as FQCN
-				if type[0] == '\\' " {{{
+				if type[0] == '\' " {{{
 					let parts = split(substitute(type, '^\\', '', ''), '\')
 					let class_candidate_namespace = join(parts[0:-2], '\')
 					let classname_candidate = parts[-1]
@@ -535,6 +535,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 				elseif type =~ '\\' " {{{
 					" TODO 相对名称空间引用
 					" 例如 use A; 给 A\B 补全和跳转
+					return unknown_result
 					" }}}
 				else " {{{
 					" no namespace in the type, threat it as a relative classname
