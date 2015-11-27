@@ -7,7 +7,7 @@ class PHPID extends PHPCD
 
     public function __construct($socket_path, $map_file, $root)
     {
-        $this->class_map = require $map_file;
+        $this->class_map_file = $map_file;
         $this->root = $root;
 
         parent::__construct($socket_path);
@@ -65,6 +65,7 @@ class PHPID extends PHPCD
         $this->initIndexDir();
 
         exec('composer dump-autoload -o -d ' . $this->root);
+        $this->class_map = require $this->class_map_file;
 
         $pipe_path = sys_get_temp_dir() . '/' . uniqid();
         posix_mkfifo($pipe_path, 0600);
