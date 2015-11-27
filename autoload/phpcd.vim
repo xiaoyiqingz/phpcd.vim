@@ -237,12 +237,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			return [path, line, 0]
 		endif " }}}
 	elseif a:symbol_context == 'new' || a:symbol_context =~ '\vimplements|extends'" {{{
-		if (has_key(a:current_imports, a:symbol))
-			let full_classname = a:current_imports[a:symbol]['name']
-		else
-			let full_classname = a:symbol_namespace . '\' . a:symbol
-		endif
-
+		let full_classname = a:symbol_namespace . '\' . a:symbol
 		let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
 		return [path, line, 0] " }}}
 	elseif a:symbol_context != '' " {{{
@@ -1320,7 +1315,7 @@ endfunction " }}}
 
 function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 	" if there's an imported class, just use that class's information
-	if has_key(a:imports, a:classname)
+	if has_key(a:imports, a:classname) && !(a:current_namespace =~ a:classname.'$')
 		let full_classname = a:imports[a:classname].name
 		let classname_parts = split(full_classname, '\\\+')
 		let namespace = join(classname_parts[0:-2], '\')
