@@ -214,7 +214,7 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let word = substitute(word, '\v\c[^\\a-zA-Z_0-9$]*$', '', '')
 
 	let current_instruction = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
-	let context = substitute(current_instruction, '\s*[$a-zA-Z_0-9\x7f-\xff]*$', '', '')
+	let context = substitute(current_instruction, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
 
 	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace(getline(0, line('.')))
@@ -960,7 +960,6 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 				let full_funcname = function_namespace . '\' .function_name
 				let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
-				echomsg string([func_path, doc_str])
 				if doc_str == ''
 					let full_funcname = '\' .function_name
 					let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
