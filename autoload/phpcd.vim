@@ -252,12 +252,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		endif
 		if interface != '' && g:phpid_channel_id >= 0
 			let impls = rpcrequest(g:phpid_channel_id, 'ls', interface, is_interface)
-			let impl = ''
-			if len(impls) == 1
-				let impl = impls[0]
-			elseif len(impls) > 1
-				let impl = phpcd#SelectOne(impls)
-			endif
+			let impl = phpcd#SelectOne(impls)
 
 			if impl != ''
 				let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', impl, a:symbol)
@@ -281,8 +276,12 @@ endfunction " }}}
 
 function! phpcd#SelectOne(items) " {{{
 	let items = a:items
-	let list = []
 	let len = len(items)
+	if (len == 1)
+		return items[0]
+	endif
+
+	let list = []
 	for i in range(1, len)
 		call add(list, printf("%2d %s", i, items[i - 1]))
 	endfor
