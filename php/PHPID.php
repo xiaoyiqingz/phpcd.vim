@@ -64,7 +64,7 @@ class PHPID extends PHPCD
 
         $this->initIndexDir();
 
-        exec('cd ' . $this->root . ' && composer dump-autoload --optimize');
+        exec('composer dump-autoload -o -d ' . $this->root);
 
         $pipe_path = sys_get_temp_dir() . '/' . uniqid();
         posix_mkfifo($pipe_path, 0600);
@@ -123,9 +123,6 @@ class PHPID extends PHPCD
     public function loop()
     {
         $this->index();
-        // 索引完成方可使用
-        $this->setChannelId0();
-
         parent::loop();
     }
 
