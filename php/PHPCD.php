@@ -33,16 +33,10 @@ class PHPCD
      * @param string $socket_path 套接字路径
      * @param string $autoload_path PHP 项目自动加载脚本
      */
-    public function __construct($socket_path, $autoload_path = null)
+    public function __construct($socket_path)
     {
         $this->unpacker = new MessagePackUnpacker();
-
-        if ($autoload_path) {
-            require $autoload_path;
-        }
-
         $this->socket_path = $socket_path;
-
         $this->connect();
     }
 
@@ -110,6 +104,7 @@ class PHPCD
     public function loop()
     {
         register_shutdown_function([$this, 'shutdown']);
+
         foreach ($this->nextRpcMsg() as $msg) {
             echo json_encode($msg) . PHP_EOL;
             $pid = pcntl_fork();
@@ -131,6 +126,7 @@ class PHPCD
 
     public function shutdown()
     {
+        // 广播消息不必返回
         if (!$this->current_rpc_msgid) {
             return;
         }

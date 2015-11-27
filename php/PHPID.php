@@ -5,12 +5,12 @@ class PHPID extends PHPCD
 {
     private $index_dir;
 
-    public function __construct($socket_path, $autoload_path, $map_file, $root)
+    public function __construct($socket_path, $map_file, $root)
     {
         $this->class_map = require $map_file;
         $this->root = $root;
 
-        parent::__construct($socket_path, $autoload_path);
+        parent::__construct($socket_path);
     }
     protected function setChannelId()
     {
