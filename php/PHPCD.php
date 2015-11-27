@@ -37,13 +37,25 @@ class PHPCD
     {
         $this->unpacker = new MessagePackUnpacker();
         $this->socket_path = $socket_path;
+        if (strpos($socket_path, ':') > 0) {
+            $this->socket_path = explode(':', $socket_path);
+        } else {
+            $this->socket_path = $socket_path;
+        }
+
         $this->connect();
     }
 
     private function connect()
     {
-        $this->socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
-        socket_connect($this->socket, $this->socket_path);
+        if (is_array($this->socket_path)) {
+            list($host, $port) = $this->socket_path;
+            $this->socket = socket_create(AF_INET, SOCK_STREAM, 0);
+            socket_connect($this->socket, $host, $port);
+        } else {
+            $this->socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+            socket_connect($this->socket, $this->socket_path);
+        }
 
         static::setChannelId();
     }
