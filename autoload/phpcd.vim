@@ -256,15 +256,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			if len(impls) == 1
 				let impl = impls[0]
 			elseif len(impls) > 1
-				let impls_list = []
-				let impls_len = len(impls)
-				for i in range(1, impls_len)
-					call add(impls_list, printf("%2d %s", i, impls[i - 1]))
-				endfor
-				let index = inputlist(impls_list)
-				if index >= 1 && index <= impls_len
-					let impl = impls[index - 1]
-				endif
+				let impl = phpcd#SelectOne(impls)
 			endif
 
 			if impl != ''
@@ -286,6 +278,19 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 
 	return unknow_location
 endfunction " }}}
+
+function! phpcd#SelectOne(items) " {{{
+	let items = a:items
+	let list = []
+	let len = len(items)
+	for i in range(1, len)
+		call add(list, printf("%2d %s", i, items[i - 1]))
+	endfor
+	let index = inputlist(list)
+	if index >= 1 && index <= len
+		return items[index - 1]
+	endif
+endfunction! " }}}
 
 function! s:getNextCharWithPos(filelines, current_pos) " {{{
 	let line_no   = a:current_pos[0]
@@ -1066,11 +1071,11 @@ function! phpcd#GetDocBlock(sccontent, search) " {{{
 				" if it's a one line docblock like comment and we can just return it right away
 				if line =~? '^\s*\/\*\*.\+\*\/\s*$'
 					return substitute(line, '\v^\s*(\/\*\*\s*)|(\s*\*\/)\s*$', '', 'g')
-				"... or if comment end found save line position and end search
+					"... or if comment end found save line position and end search
 				elseif line =~? '^\s*\*/'
 					let comment_end = l
 					break
-				" ... or the line doesn't blank (only whitespace or nothing) end search
+					" ... or the line doesn't blank (only whitespace or nothing) end search
 				elseif line !~? '^\s*$'
 					break
 				endif
@@ -1109,12 +1114,12 @@ endfunction " }}}
 
 function! phpcd#ParseDocBlock(docblock) " {{{
 	let res = {
-		\ 'description': '',
-		\ 'params': [],
-		\ 'return': {},
-		\ 'throws': [],
-		\ 'var': {},
-		\ }
+				\ 'description': '',
+				\ 'params': [],
+				\ 'return': {},
+				\ 'throws': [],
+				\ 'var': {},
+				\ }
 
 	let res.description = substitute(matchstr(a:docblock, '\zs\_.\{-}\ze\(@var\|@param\|@return\|$\)'), '\(^\_s*\|\_s*$\)', '', 'g')
 	let docblock_lines = split(a:docblock, "\n")
