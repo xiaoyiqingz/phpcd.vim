@@ -1181,14 +1181,16 @@ function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 	" add array of primitives to the list too, like string[]
 	let primitive_types += map(copy(primitive_types), 'v:val."[]"')
 	let types = split(a:docblock_type, '|')
+	let valid_types = []
 	for type in types
 		if index(primitive_types, type) == -1
-			return type
+			call add(valid_types, type)
 		endif
 	endfor
 
 	" only primitive types found, return the first one
-	return types[0]
+	" return types[0]
+	return phpcd#SelectOne(valid_types)
 
 endfunction " }}}
 
