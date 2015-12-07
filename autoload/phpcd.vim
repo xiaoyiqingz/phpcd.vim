@@ -279,6 +279,8 @@ function! phpcd#SelectOne(items) " {{{
 	let len = len(items)
 	if (len == 1)
 		return items[0]
+	elseif (len == 0)
+		return
 	endif
 
 	let list = []
