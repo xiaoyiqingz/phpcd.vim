@@ -8,12 +8,12 @@ PHPCD 的 VimL 部分基于[phpcomplete.vim](https://github.com/shawncplus/phpco
 
 因为 PHPCD 利用 PHP 的[反射机制](http://php.net/manual/en/book.reflection.php)进行补全和跳转，所以 PHPCD 几乎不需要事先生成索引文件，启动速度、补全速度和跳转速度都非常快，代码也非常简洁。
 
-PHPCD 只能配合[NeoVim](http://neovim.io/)工作，这是一个艰难的抉择。
+PHPCD 目前只能配合[NeoVim](http://neovim.io/)工作，这是一个艰难的抉择。
 
 ##  特色
  * 快、轻、强
  * 静态调用`Class::method()`显示静态成员和方法；动态调用`$class->method()`显示非静态成员变量和方法
- * 真正支持`self` ，`static` 和 `$this` 上下文
+ * 真正识别`self`，`static`和`$this`上下文环境
  * 支持通过多种方式推断变量类型：
      - 变量类型注解 `/* @var $yourvar YourClass */`、 `/* @var YourClass $yourvar */`
      - 使用 `new` 初始化类实例 `$instance = new Class;`
@@ -27,53 +27,38 @@ PHPCD 只能配合[NeoVim](http://neovim.io/)工作，这是一个艰难的抉�
 
 ### 环境要求
  1. PHP 5.3+
- 2. 开启 [socket](http://php.net/manual/en/book.sockets.php) 扩展
- 3. 开启 [PCNTL](http://php.net/manual/en/book.pcntl.php) 扩展
- 4. 开启 [Msgpack 0.5.7+](https://github.com/msgpack/msgpack-php) 扩展
- 5. 开启 [Composer](https://getcomposer.org/) 支持
+ 2. [socket](http://php.net/manual/en/book.sockets.php) 扩展
+ 3. [PCNTL](http://php.net/manual/en/book.pcntl.php) 扩展
+ 4. [Msgpack 0.5.7+](https://github.com/msgpack/msgpack-php) 扩展
+ 5. [Composer](https://getcomposer.org/) 支持
  6. NeoVim
 
-### 安装 Msgpack 扩展
 
-Msgpack 扩展需要 0.5.7 及以上版本。
-
-```
-git clone https://github.com/msgpack/msgpack-php.git
-cd msgpack-php
-phpize
-./configure
-make
-sudo make install
-```
-
-在 php.ini 启用 Msgpack：
-```
-extension=msgpack.so
-```
-
-### 安装 vim-plug
+### 安装 PHPCD
 
 推荐使用[Vim-Plug](https://github.com/junegunn/vim-plug/blob/master/README.md)管理 Vim 插件。
 
-安装 Vim-Plug 后，可以添加：
+安装 Vim-Plug 后，添加：
 
 ```
-Plug 'lvht/phpcd.vim'
+Plug 'phpvim/phpcd.vim'
 Plug 'vim-scripts/progressbar-widget' " 用来显示索引进度的插件
 ```
 
 然后执行`:PlugInstall`进行安装。
 
-最后，在配置文件中指定 PHPCD 为 PHP 的 omni 补全引擎：
+### 启用 PHPCD
+
+在配置文件中指定 PHPCD 为 PHP 的 omni 补全引擎：
 
 ```
 autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
 ```
 
 ## 使用方法
-首先运行 `composer dump-autoload` 生成 `autoload.php`，然后打开 NeoVim。
 
-打开一个 php 文件，如果一切正常的话，几秒钟后 Vim 状态栏会显示更新进度条。进度条走完则可开始使用。
+首先运行 `composer update` 更新依赖并生成自动加载文件，然后打开 NeoVim。
 
-补全按<kbd>Ctrl</kbd>+<kbd>x</kbd><kbd>Ctrl</kbd>+<kbd>o</kbd>，
-跳转按<kbd>ctrl</kbd>+<kbd>]</kbd>。
+打开一个 php 文件，如果一切正常的话，几秒钟后 NeoVim 状态栏会显示更新进度条。进度条走完则可开始使用。
+
+补全按<kbd>Ctrl</kbd>+<kbd>x</kbd><kbd>Ctrl</kbd>+<kbd>o</kbd>，跳转按<kbd>ctrl</kbd>+<kbd>]</kbd>。
