@@ -920,63 +920,13 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			endif " }}}
 
-			" assignment for the variable in question with a function on the right hand side
-			if line =~# '^\s*'.object.'\s*=&\?\s*'.function_invocation_pattern " {{{
-				" try to find the next non-comment or string ";" char
-				let start_col = match(line, '\C^\s*'.object.'\s*=\zs&\?\s*'.function_invocation_pattern)
-				let filelines = reverse(copy(lines))
-				let [pos, char] = s:getNextCharWithPos(filelines, [len(filelines) - i, start_col])
-				let chars_read = 1
-				let last_pos = pos
-				" function_boundary == 0 if we are not in a function
-				let real_lines_offset = len(function_boundary) == 1 ? 1 : function_boundary[0][0]
-				" read while end of the file
-				while char != 'EOF' && chars_read < 1000
-					let last_pos = pos
-					let [pos, char] = s:getNextCharWithPos(filelines, pos)
-					let chars_read += 1
-					" we got a candidate
-					if char == ';'
-						" pos values is relative to the function's lines,
-						" line 0 need to be offsetted with the line number
-						" where te function was started to get the line number
-						" in real buffer terms
-						let synIDName = synIDattr(synID(real_lines_offset + pos[0], pos[1] + 1, 0), 'name')
-						" it's not a comment or string, end search
-						if synIDName !~? 'comment\|string'
-							break
-						endif
-					endif
-				endwhile
-
-				let prev_context = phpcd#GetCurrentInstruction(real_lines_offset + last_pos[0], last_pos[1], b:phpbegin)
-				if prev_context == ''
-					" cannot get previous context give up
-					return
-				endif
-
-				let function_name = matchstr(prev_context, '^'.function_invocation_pattern.'\ze')
-				let function_name = matchstr(function_name, '^\zs.\+\ze\s*($') " strip the trailing (
-				let [function_name, function_namespace] = phpcd#ExpandClassName(function_name, a:current_namespace, a:imports)
-
-				let full_funcname = function_namespace . '\' .function_name
-				let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
-				if doc_str == ''
-					let full_funcname = '\' .function_name
-					let [func_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', full_funcname)
-				endif
-
-				if doc_str != '' " {{{
-					" namespace and use import of the function source
-					let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', func_path)
-					let docblock = phpcd#ParseDocBlock(doc_str)
-					if has_key(docblock.return, 'type')
-						let classname_candidate = docblock.return.type
-						" try to expand the classname of the returned type with the context got from the function's source file
-						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, nsuse.namespace, nsuse.imports)
-						break
-					endif
-				endif " }}}
+			" assignment for the variable in question with function chains on the right hand side
+			if line =~? '^\s*' . object . '\s*=.*);\?$' " {{{
+				let classname = phpcd#GetCallChainReturnTypeAt(a:start_line - i)
+				let classname_parts = split(classname, '\\\+')
+				let classname_candidate = classname_parts[-1]
+				let class_candidate_namespace = join(classname_parts[0:-2], '\')
+				break
 			endif " }}}
 
 			" foreach with the variable in question
@@ -1374,6 +1324,16 @@ function! phpcd#getComposerRoot() " {{{
 		let root = fnamemodify(root, ":h")
 	endwhile
 	return root
+endfunction " }}}
+
+function! phpcd#GetCallChainReturnTypeAt(line) " {{{
+	silent! below 1sp
+	exec 'normal! ' . a:line . 'G'
+	call search(';')
+	let [symbol, symbol_context, symbol_namespace, current_imports] = phpcd#GetCurrentSymbolWithContext()
+	let classname = phpcd#GetClassName(line('.'), symbol_context, symbol_namespace, current_imports)
+	q
+	return classname
 endfunction " }}}
 
 " vim: foldmethod=marker:noexpandtab:ts=2:sts=2:sw=2
