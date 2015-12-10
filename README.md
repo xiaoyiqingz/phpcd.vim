@@ -1,3 +1,5 @@
+[English](./README_en.md)
+
 [![asciicast](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx.png)](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx)
 
 ## 简介
