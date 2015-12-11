@@ -72,15 +72,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 			" TODO complete $foo = new
 		endif " }}}
 
-		let line = getline('.')
-		if line =~ '* @$'
-			" TODO 根据输入过滤
-			return phpcd#CompleteDoc()
-		endif
-
-		if a:base =~ '^\$' " {{{
-			return phpcd#CompleteVariable(a:base)
-		else
+		if a:base =~ '^[^$]' " {{{
 			return phpcd#CompleteGeneral(a:base, current_namespace, imports)
 		endif " }}}
 	finally
@@ -88,66 +80,10 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	endtry " }}}
 endfunction " }}}
 
-function! phpcd#CompleteDoc() " {{{
-	return [
-				\ 'api', 'author', 'category', 'copyright', 'deprecated',
-				\ 'example', 'filesource', 'global', 'ignore', 'internal',
-				\ 'license', 'link', 'method', 'package', 'param', 'property',
-				\ 'property-read', 'property-write', 'return', 'see', 'since',
-				\ 'source', 'subpackage', 'throws', 'todo', 'uses', 'var',
-				\ 'version'
-				\]
-endfunction " }}}
-
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
 	return rpcrequest(g:phpcd_channel_id, 'info', '', pattern)
-endfunction " }}}
-
-function! phpcd#CompleteVariable(base) " {{{
-	let res = []
-
-	" Internal solution for current file.
-	let file = getline(1, '$')
-	let jfile = join(file, ' ')
-	let int_vals = split(jfile, '\ze\$')
-	let int_vars = {}
-	for i in int_vals
-		if i =~? '^\$[a-zA-Z_\x7f-\xff][a-zA-Z_0-9\x7f-\xff]*\s*=\s*new'
-			let val = matchstr(i,
-						\ '^\$[a-zA-Z_\x7f-\xff][a-zA-Z_0-9\x7f-\xff]*')
-		else
-			let val = matchstr(i,
-						\ '^\$[a-zA-Z_\x7f-\xff][a-zA-Z_0-9\x7f-\xff]*')
-		endif
-		if val != ''
-			let int_vars[val] = ''
-		endif
-	endfor
-
-	for m in sort(keys(int_vars))
-		if m =~# '^\'.a:base
-			call add(res, m)
-		endif
-	endfor
-
-	let int_list = res
-
-	let int_dict = []
-	for i in int_list
-		if int_vars[i] != ''
-			let class = ' '
-			if int_vars[i] != ''
-				let class = i.' class '
-			endif
-			let int_dict += [{'word':i, 'info':class.int_vars[i], 'menu':int_vars[i], 'kind':'v'}]
-		else
-			let int_dict += [{'word':i, 'kind':'v'}]
-		endif
-	endfor
-
-	return int_dict
 endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
