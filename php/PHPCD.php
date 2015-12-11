@@ -529,9 +529,8 @@ class PHPCD
             if (!$line) {
                 continue;
             }
-            if (strtolower(substr($line, 0, 9)) == 'namespace') {
-                $namespace = substr($line, 10, -1);
-                $s['namespace'] = $namespace;
+            if (preg_match('/(<\?php)?\s*namespace\s+(.*);$/', $line, $matches)) {
+                $s['namespace'] = $matches[2];
             } elseif (strtolower(substr($line, 0, 3) == 'use')) {
                 $as_pos = strripos($line, ' as ');
                 if ($as_pos !== false) {
