@@ -1085,9 +1085,11 @@ function! phpcd#GetCurrentNameSpace(file_lines) " {{{
 	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 
 	let imports = {}
-	for [alias, fqdn] in items(nsuse.imports)
-		let imports[alias] = {'name': fqdn, 'kind': ''}
-	endfor
+	if len(nsuse.imports) > 0
+		for [alias, fqdn] in items(nsuse.imports)
+			let imports[alias] = {'name': fqdn, 'kind': ''}
+		endfor
+	endif
 
 	return [nsuse.namespace, imports]
 endfunction " }}}
