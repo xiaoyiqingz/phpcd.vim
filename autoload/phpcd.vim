@@ -589,7 +589,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 	let class_candidate_imports = a:imports
 	let methodstack = phpcd#GetMethodStack(a:context) " }}}
 
-	if a:context =~? '\$this->' || a:context =~? '\(self\|static\)::' || a:context =~? 'parent::' " {{{
+	if a:context =~? '^\$this->' || a:context =~? '^\(self\|static\)::' || a:context =~? 'parent::' " {{{
 		let i = 1
 		while i < a:start_line
 			let line = getline(a:start_line - i)
