@@ -1,5 +1,18 @@
 <?php
-require __DIR__ . '/init_log.php';
-require $argv[2];
+error_reporting(0);
+
+$root = $argv[1];
+
+require $root . '/vendor/autoload.php';
+require __DIR__ . '/RpcServer.php';
 require __DIR__ . '/PHPID.php';
-(new PHPID($argv[1], $argv[3], $argv[4]))->loop();
+
+do {
+    $pid = pcntl_fork();
+    if ($pid > 0) {
+        pcntl_waitpid($pid, $status);
+    } elseif ($pid === 0) {
+        (new PHPID)->setRoot($root)->loop();
+        exit;
+    }
+} while ($pid !== -1);
