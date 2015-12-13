@@ -176,7 +176,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		let full_classname = a:symbol_namespace . '\' . a:symbol
 		let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
 		return [path, line, 0] " }}}
-	elseif a:symbol_context != '' " {{{
+	elseif a:symbol_context =~ 'function' " {{{
 		" try to find interface method's implementation
 		" or the subclass of abstract class
 		" the var 'interface' is the interface name
@@ -614,7 +614,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 			let i += 1
 		endwhile " }}}
-	elseif a:context =~ 'public\( function\)\?' " {{{
+	elseif a:context =~ 'function' " {{{
 		let i = 1
 		while i < a:start_line
 			let line = getline(a:start_line - i)
