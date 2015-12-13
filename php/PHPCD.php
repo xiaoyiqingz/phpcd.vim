@@ -12,6 +12,122 @@ class PHPCD extends RpcServer
         }
     }
 
+    /**
+     * 获取函数或者类成员方法的源代码位置（文件路径和行号）
+     *
+     * @param string $class_name 类名，传空值则表示函数
+     * @param string $method_name 函数名或者方法名
+     *
+     * @return [ path, line ]
+     */
+    public function location($class_name, $method_name = null)
+    {
+        if ($class_name) {
+            return $this->locationClass($class_name, $method_name);
+        } else {
+            return $this->locationFunction($method_name);
+        }
+    }
+
+    private function locationClass($class_name, $method_name = null)
+    {
+        try {
+            $class = new ReflectionClass($class_name);
+            if (!$method_name) {
+                return [
+                    $class->getFileName(),
+                    $class->getStartLine(),
+                ];
+            }
+
+            $method  = $class->getMethod($method_name);
+
+            if ($method) {
+                return [
+                    $method->getFileName(),
+                    $method->getStartLine(),
+                ];
+            }
+        } catch (ReflectionException $e) {
+        }
+
+        return [
+            '',
+            null,
+        ];
+    }
+
+    /**
+     * 获取类成员方法、成员变量或者函数的注释块
+     *
+     * @param string $class_name 类名，传空值则表示第二个参数为函数名
+     * @param string $name 函数名或者成员名
+     */
+    public function doc($class_name, $name)
+    {
+        if ($class_name && $name) {
+            list($path, $doc) = $this->docClass($class_name, $name);
+        } elseif ($name) {
+            list($path, $doc) = $this->docFunction($name);
+        }
+
+        if ($doc) {
+            return [$path, $this->clearDoc($doc)];
+        } else {
+            return [null, null];
+        }
+    }
+
+    /**
+     * 获取 PHP 文件的名称空间和 use 列表
+     *
+     * @param string $path 文件路径
+     *
+     * @return [
+     *   'namespace' => 'ns',
+     *   'imports' => [
+     *     'alias1' => 'fqdn1',
+     *   ]
+     * ]
+     */
+    public function nsuse($path)
+    {
+        $file = new SplFileObject($path);
+        $s = [
+            'namespace' => '',
+            'imports' => [
+            ],
+        ];
+        foreach ($file as $line) {
+            if (preg_match('/\b(class|interface|trait)\b/i', $line)) {
+                break;
+            }
+            $line = trim($line);
+            if (!$line) {
+                continue;
+            }
+            if (preg_match('/(<\?php)?\s*namespace\s+(.*);$/', $line, $matches)) {
+                $s['namespace'] = $matches[2];
+            } elseif (strtolower(substr($line, 0, 3) == 'use')) {
+                $as_pos = strripos($line, ' as ');
+                if ($as_pos !== false) {
+                    $alias = trim(substr($line, $as_pos + 3, -1));
+                    $s['imports'][$alias] = trim(substr($line, 3, $as_pos - 3));
+                } else {
+                    $slash_pos = strripos($line, '\\');
+                    if ($slash_pos === false) {
+                        $alias = trim(substr($line, 4, -1));
+                    } else {
+                        $alias = trim(substr($line, $slash_pos + 1, -1));
+                    }
+                    $s['imports'][$alias] = trim(substr($line, 4, -1));
+                }
+            }
+        }
+
+        return $s;
+    }
+
     private function classInfo($class_name, $pattern, $mode)
     {
         $reflection = new ReflectionClass($class_name);
@@ -170,51 +286,6 @@ class PHPCD extends RpcServer
         return "$modifier $static";
     }
 
-    /**
-     * 获取函数或者类成员方法的源代码位置（文件路径和行号）
-     *
-     * @param string $class_name 类名，传空值则表示函数
-     * @param string $method_name 函数名或者方法名
-     *
-     * @return [ path, line ]
-     */
-    public function location($class_name, $method_name = null)
-    {
-        if ($class_name) {
-            return $this->locationClass($class_name, $method_name);
-        } else {
-            return $this->locationFunction($method_name);
-        }
-    }
-
-    private function locationClass($class_name, $method_name = null)
-    {
-        try {
-            $class = new ReflectionClass($class_name);
-            if (!$method_name) {
-                return [
-                    $class->getFileName(),
-                    $class->getStartLine(),
-                ];
-            }
-
-            $method  = $class->getMethod($method_name);
-
-            if ($method) {
-                return [
-                    $method->getFileName(),
-                    $method->getStartLine(),
-                ];
-            }
-        } catch (ReflectionException $e) {
-        }
-
-        return [
-            '',
-            null,
-        ];
-    }
-
     private function locationFunction($name)
     {
         $func = new ReflectionFunction($name);
@@ -260,80 +331,10 @@ class PHPCD extends RpcServer
         ];
     }
 
-    /**
-     * 获取类成员方法、成员变量或者函数的注释块
-     *
-     * @param string $class_name 类名，传空值则表示第二个参数为函数名
-     * @param string $name 函数名或者成员名
-     */
-    public function doc($class_name, $name)
-    {
-        if ($class_name && $name) {
-            list($path, $doc) = $this->docClass($class_name, $name);
-        } elseif ($name) {
-            list($path, $doc) = $this->docFunction($name);
-        }
-
-        if ($doc) {
-            return [$path, $this->clearDoc($doc)];
-        } else {
-            return [null, null];
-        }
-    }
-
     private function clearDoc($doc)
     {
         $doc = preg_replace('/[ \t]*\* ?/m','', $doc);
         return preg_replace('#\s*\/|/\s*#','', $doc);
     }
 
-    /**
-     * 获取 PHP 文件的名称空间和 use 列表
-     *
-     * @param string $path 文件路径
-     *
-     * @return [
-     *   'namespace' => 'ns',
-     *   'imports' => [
-     *     'alias1' => 'fqdn1',
-     *   ]
-     * ]
-     */
-    public function nsuse($path)
-    {
-        $file = new SplFileObject($path);
-        $s = [
-            'namespace' => '',
-            'imports' => [
-            ],
-        ];
-        foreach ($file as $line) {
-            if (preg_match('/\b(class|interface|trait)\b/i', $line)) {
-                break;
-            }
-            $line = trim($line);
-            if (!$line) {
-                continue;
-            }
-            if (preg_match('/(<\?php)?\s*namespace\s+(.*);$/', $line, $matches)) {
-                $s['namespace'] = $matches[2];
-            } elseif (strtolower(substr($line, 0, 3) == 'use')) {
-                $as_pos = strripos($line, ' as ');
-                if ($as_pos !== false) {
-                    $alias = trim(substr($line, $as_pos + 3, -1));
-                    $s['imports'][$alias] = trim(substr($line, 3, $as_pos - 3));
-                } else {
-                    $slash_pos = strripos($line, '\\');
-                    if ($slash_pos === false) {
-                        $alias = trim(substr($line, 4, -1));
-                    } else {
-                        $alias = trim(substr($line, $slash_pos + 1, -1));
-                    }
-                    $s['imports'][$alias] = trim(substr($line, 4, -1));
-                }
-            }
-        }
-
-        return $s;
-    }
 }
