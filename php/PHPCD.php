@@ -97,9 +97,11 @@ class PHPCD extends RpcServer
             'namespace' => '',
             'imports' => [
             ],
+            'class' => '',
         ];
         foreach ($file as $line) {
-            if (preg_match('/\b(class|interface|trait)\b/i', $line)) {
+            if (preg_match('/(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
+                $s['class'] = $matches[2];
                 break;
             }
             $line = trim($line);

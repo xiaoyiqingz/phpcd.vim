@@ -913,30 +913,14 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 	endif " }}}
 endfunction " }}}
 
-function! phpcd#GetCurrentClassName() " {{{
-	let [start_line, start_col] = searchpos('class', 'n')
-	let [current_namespace, imports] = phpcd#GetCurrentNameSpace(getline(0, start_line))
-	" 假设文件名就是类名，去掉 .php 后缀
-	let file_name = expand('%:t')[:-5]
-
-	return current_namespace . '\' . file_name
-endfunction " }}}
-
-function! phpcd#initAutocmd() " {{{
-	augroup phpcd
-		autocmd!
-		autocmd BufLeave,VimLeave *.php if g:phpcd_need_update > 0 | call phpcd#updateIndex() | endif
-		autocmd BufWritePost *.php let g:phpcd_need_update = 1
-	augroup END
-endfunction " }}}
-
-function! phpcd#updateIndex() " {{{
+function! phpcd#UpdateIndex() " {{{
 	if g:phpid_channel_id < 0
 		return
 	endif
 
 	let g:phpcd_need_update = 0
-	let classname = phpcd#GetCurrentClassName()
+	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+	let classname = nsuse.namespace . '\' . nsuse.class
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
 endfunction " }}}
 
@@ -1169,17 +1153,6 @@ function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 		endif
 	endif
 	return [classname, namespace]
-endfunction " }}}
-
-function! phpcd#getComposerRoot() " {{{
-	let root = getcwd()
-	while root != "/"
-		if (filereadable(root . "/vendor/autoload.php"))
-			break
-		endif
-		let root = fnamemodify(root, ":h")
-	endwhile
-	return root
 endfunction " }}}
 
 function! phpcd#GetCallChainReturnTypeAt(line) " {{{
