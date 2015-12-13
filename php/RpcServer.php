@@ -152,6 +152,6 @@ class RpcServer
     protected function log($log, $context = [])
     {
         $log = $log . '#' . json_encode($context, JSON_PRETTY_PRINT) . PHP_EOL;
-        file_put_contents('/tmp/msgpackrpc.log', $log, FILE_APPEND);
+        fwrite(STDERR, $log);
     }
 }
