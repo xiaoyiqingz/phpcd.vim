@@ -100,7 +100,7 @@ class PHPCD extends RpcServer
             'class' => '',
         ];
         foreach ($file as $line) {
-            if (preg_match('/(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
+            if (preg_match('/\b(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
                 $s['class'] = $matches[2];
                 break;
             }
@@ -129,6 +129,67 @@ class PHPCD extends RpcServer
 
         return $s;
     }
+
+    /**
+     * 获取函数或者成员方法的返回值类型
+     */
+    public function functype($class_name, $name)
+    {
+        list($path, $doc) = $this->doc($class_name, $name);
+        $has_doc = preg_match('/@(return|var)\s+(\S+)/m', $doc, $matches);
+        if (!$has_doc) {
+            return [];
+        }
+
+        $nsuse = $this->nsuse($path);
+
+        $types = [];
+        foreach (explode('|', $matches[2]) as $type) {
+            if (isset($this->primitive_types[$type])) {
+                continue;
+            }
+
+            if (in_array(strtolower($type) , ['static', '$this', 'self'])) {
+                $type = $nsuse['namespace'] . '\\' . $nsuse['class'];
+            } elseif ($type[0] != '\\') {
+                $parts = explode('\\', $type);
+                $alias = array_shift($parts);
+                if (isset($nsuse['imports'][$alias])) {
+                    $type = $nsuse['imports'][$alias];
+                    if ($parts) {
+                        $type = $type . '\\' . join('\\', $parts);
+                    }
+                } else {
+                    $type = $nsuse['namespace'] . '\\' . $type;
+                }
+            }
+
+            if ($type) {
+                if ($type[0] != '\\') {
+                    $type = '\\' . $type;
+                }
+                $types[] = $type;
+            }
+        }
+
+        return $types;
+    }
+
+    private $primitive_types = [
+        'array'    => 1,
+        'bool'     => 1,
+        'callable' => 1,
+        'double'   => 1,
+        'float'    => 1,
+        'int'      => 1,
+        'mixed'    => 1,
+        'null'     => 1,
+        'object'   => 1,
+        'resource' => 1,
+        'scalar'   => 1,
+        'string'   => 1,
+        'void'     => 1,
+    ];
 
     private function classInfo($class_name, $pattern, $mode)
     {

@@ -446,61 +446,19 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 		return [classname_candidate, class_candidate_namespace] " }}}
 	else " {{{
 		call remove(methodstack, 0)
-		let method_is_array = (methodstack[0] =~ '\v^[^[]+\[' ? 1 : 0)
 		let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
 
 		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
 
 		let full_classname = class_candidate_namespace . '\' . classname_candidate
-		let [method_path, doc_str] = rpcrequest(g:phpcd_channel_id, 'doc', full_classname, method)
+		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', full_classname, method)
+		if len(return_types) > 0
+			let return_type = phpcd#SelectOne(return_types)
+			let [classname_candidate, class_candidate_namespace] = s:SplitClassName(return_type)
 
-		if doc_str != '' " {{{
-			let classstructure = rpcrequest(g:phpcd_channel_id, 'nsuse', method_path)
-			let docblock = phpcd#ParseDocBlock(doc_str)
-			if has_key(docblock.return, 'type') || has_key(docblock.var, 'type') " {{{
-				let type = has_key(docblock.return, 'type') ? docblock.return.type : docblock.var.type
-
-				" there's a namespace in the type, threat the type as FQCN
-				if type[0] == '\' " {{{
-					let parts = split(substitute(type, '^\\', '', ''), '\')
-					let class_candidate_namespace = join(parts[0:-2], '\')
-					let classname_candidate = parts[-1]
-					" check for renamed namepsace in imports
-					if has_key(classstructure.imports, class_candidate_namespace)
-						let class_candidate_namespace = classstructure.imports[class_candidate_namespace].name
-					endif " }}}
-				elseif type =~ '\\' " {{{
-					" TODO 相对名称空间引用
-					" 例如 use A; 给 A\B 补全和跳转
-					return unknown_result
-					" }}}
-				else " {{{
-					" no namespace in the type, threat it as a relative classname
-					let returnclass = type
-					if has_key(classstructure.imports, returnclass)
-						let full_classname = classstructure.imports[returnclass]
-						let parts = split(substitute(type, '^\\', '', ''), '\')
-						let fullnamespace = join(parts[0:-2], '\')
-					else
-						let fullnamespace = class_candidate_namespace
-					endif
-					" make @return self, static, $this the same way
-					" (not exactly what php means by these)
-					if returnclass == 'self' || returnclass == 'static' || returnclass == '$this' || returnclass == 'self[]' || returnclass == 'static[]' || returnclass == '$this[]'
-						if returnclass =~ '\[\]$'
-							let classname_candidate = a:classname_candidate.'[]'
-						else
-							let classname_candidate = a:classname_candidate
-						endif
-						let class_candidate_namespace = a:class_candidate_namespace
-					else
-						let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(returnclass, fullnamespace, a:imports)
-					endif
-				endif " }}}
-
+			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
 				return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
-			endif " }}}
-		endif " }}}
+		endif
 	endif " }}}
 
 	return unknown_result
@@ -663,19 +621,11 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate " }}}
 	elseif get(methodstack, 0) =~# function_invocation_pattern " {{{
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
-		let [func_path, docblock_str] = rpcrequest(g:phpcd_channel_id, 'doc', '', function_name)
-		let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', func_path)
+		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', '', function_name)
+		if len(return_types) > 0
+			let return_type = phpcd#SelectOne(return_types)
+			let [classname_candidate, class_candidate_namespace] = s:SplitClassName(return_type)
 
-		if docblock_str != ''
-			let docblock = phpcd#ParseDocBlock(docblock_str)
-
-			if has_key(docblock.return, 'type')
-				let classname_candidate = docblock.return.type
-				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, nsuse.namespace, nsuse.imports)
-			endif
-		endif
-
-		if classname_candidate != ''
 			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 			" return absolute classname, without leading \
 			return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
@@ -1059,10 +1009,7 @@ function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 		endif
 	endfor
 
-	" only primitive types found, return the first one
-	" return types[0]
 	return phpcd#SelectOne(valid_types)
-
 endfunction " }}}
 
 function! phpcd#GetCurrentNameSpace(file_lines) " {{{
@@ -1152,6 +1099,20 @@ function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 			let classname = classname_parts[-1]
 		endif
 	endif
+	return [classname, namespace]
+endfunction " }}}
+
+function! s:SplitClassName(name) " {{{
+	let parts = split(a:name, '\\\+')
+
+	if len(parts) > 1
+		let namespace = join(parts[0:-2], '\')
+		let classname = parts[-1]
+	else
+		let namespace = '\'
+		let classname = a:name
+	endif
+
 	return [classname, namespace]
 endfunction " }}}
 

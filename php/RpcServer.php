@@ -111,6 +111,7 @@ class RpcServer
         if ($callback) {
             $msg_id = $this->getMessageId();
             $message = [self::TYPE_REQUEST, $msg_id, $method, $params];
+            $this->addCallback($msg_id, $callback);
         } else {
             $message = [self::TYPE_NOTIFICATION, $method, $params];
         }
