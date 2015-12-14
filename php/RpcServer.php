@@ -106,11 +106,6 @@ class RpcServer
         return call_user_func_array($callback, $params);
     }
 
-    final public function echo($data)
-    {
-        return $data;
-    }
-
     protected function call($method, $params, $callback = null)
     {
         if ($callback) {
