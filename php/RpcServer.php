@@ -29,7 +29,15 @@ class RpcServer
                 $message = $this->unpacker->data();
                 $this->unpacker->reset();
 
-                $this->onMessage($message);
+                $pid = pcntl_fork();
+                if ($pid == -1) {
+                    die('failed to fork');
+                } elseif ($pid > 0) {
+                    pcntl_waitpid($pid, $status);
+                } else {
+                    $this->onMessage($message);
+                    exit;
+                }
             }
         }
     }
