@@ -874,6 +874,14 @@ function! phpcd#UpdateIndex() " {{{
 	return rpcrequest(g:phpid_channel_id, 'update', classname)
 endfunction " }}}
 
+function! phpcd#Reindex() "{{{
+	if g:phpid_channel_id < 0
+		return
+	endif
+
+	call rpcnotify(g:phpid_channel_id, 'index', 1)
+endfunction " }}}
+
 function! phpcd#GetDocBlock(sccontent, search) " {{{
 	let i = 0
 	let l = 0
