@@ -22,7 +22,8 @@ class RpcServer
     public function loop()
     {
         $stdin = fopen('php://stdin', 'r');
-        while ($buffer = fread($stdin, 1024)) {
+        while (true) {
+            $buffer = fread($stdin, 1024);
             $this->unpacker->feed($buffer);
 
             if ($this->unpacker->execute()) {
