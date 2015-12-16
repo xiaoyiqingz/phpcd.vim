@@ -871,7 +871,7 @@ function! phpcd#UpdateIndex() " {{{
 	let g:phpcd_need_update = 0
 	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 	let classname = nsuse.namespace . '\' . nsuse.class
-	return rpcrequest(g:phpid_channel_id, 'update', classname)
+	return rpcnotify(g:phpid_channel_id, 'update', classname)
 endfunction " }}}
 
 function! phpcd#Reindex() "{{{
