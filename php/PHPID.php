@@ -71,7 +71,7 @@ class PHPID extends RpcServer
 
         $this->initIndexDir();
 
-        exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1>/dev/null');
+        exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1 >/dev/null');
         $this->class_map = require $this->root
             . '/vendor/composer/autoload_classmap.php';
 
