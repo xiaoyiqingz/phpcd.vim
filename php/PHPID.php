@@ -71,7 +71,7 @@ class PHPID extends RpcServer
 
         $this->initIndexDir();
 
-        exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1>/dev/null');
+        exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1 >/dev/null');
         $this->class_map = require $this->root
             . '/vendor/composer/autoload_classmap.php';
 
@@ -144,13 +144,7 @@ class PHPID extends RpcServer
             unset($this->class_map[$class_name]);
             $this->vimUpdateProgressBar();
             require $file_path;
-            list($parent, $interfaces) = $this->getClassInfo($class_name);
-            if ($parent) {
-                $this->updateParentIndex($parent, $class_name);
-            }
-            foreach ($interfaces as $interface) {
-                $this->updateInterfaceIndex($interface, $class_name);
-            }
+            $this->update($class_name);
         }
     }
 
