@@ -1,0 +1,15 @@
+{
+    "name": "phpvim/phpcd.vim",
+    "authors": [
+        {
+            "name": "吕海涛",
+            "email": "git@lvht.net"
+        }
+    ],
+    "autoload": {
+        "classmap": [
+            "php"
+        ]
+    },
+    "require": {}
+}

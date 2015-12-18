@@ -2,6 +2,9 @@
 
 class PHPID extends RpcServer
 {
+    /**
+     * @return static
+     */
     public function setRoot($root)
     {
         $this->root = $root;
