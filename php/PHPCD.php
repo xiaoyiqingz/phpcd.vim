@@ -2,7 +2,19 @@
 
 class PHPCD extends RpcServer
 {
-    public function info($class_name, $pattern, $mode) {
+    /**
+     *  @param array Map between modifier numbers and displayed symbols
+     */
+    private $modifierSymbols = [
+        ReflectionMethod::IS_FINAL      => '!',
+        ReflectionMethod::IS_PRIVATE    => '-',
+        ReflectionMethod::IS_PROTECTED  => '#',
+        ReflectionMethod::IS_PUBLIC     => '+',
+        ReflectionMethod::IS_STATIC     => '@'
+    ];
+
+    public function info($class_name, $pattern, $mode)
+    {
         if ($class_name) {
             return $this->classInfo($class_name, $pattern, $mode);
         } elseif($pattern) {
@@ -298,16 +310,19 @@ class PHPCD extends RpcServer
         if ($pattern && strpos($name, $pattern) !== 0) {
             return null;
         }
-        $modifier = $this->getModifier($property);
+
+        $modifier = $this->getModifiers($property);
 
         return [
             'word' => $name,
-            'abbr' => "$modifier $name",
-            'info' => preg_replace('#/?\*(\*|/)?#','', $property->getDocComment()),
+            'abbr' => sprintf("%3s %s", $modifier, $name),
+            'info' => preg_replace('#/?\*(\*|/)?#', '', $property->getDocComment()),
             'kind' => 'p',
             'icase' => 1,
         ];
     }
+
+    // private function isAvailable()
 
     private function getMethodInfo($method, $pattern = null)
     {
@@ -319,34 +334,42 @@ class PHPCD extends RpcServer
             return $param->getName();
         }, $method->getParameters());
 
-        $modifier = $this->getModifier($method);
+        $modifier = $this->getModifiers($method);
 
         return [
             'word' => $name,
-            'abbr' => "$modifier $name (" . join(', ', $params) . ')',
+            'abbr' => sprintf("%3s %s (%s)", $modifier, $name, join(', ', $params)),
             'info' => $this->clearDoc($method->getDocComment()),
             'kind' => 'f',
             'icase' => 1,
         ];
     }
 
-    private function getModifier($reflection)
+    /**
+     *
+     *
+     * @return array
+     */
+    private function getModifierSymbols()
     {
-        $modifier = '';
+        return $this->modifierSymbols;
+    }
 
-        if ($reflection->isPublic()) {
-            $modifier = '+';
-        } elseif ($reflection->isProtected()) {
-            $modifier = '#';
-        } elseif ($reflection->isPrivate()) {
-            $modifier = '-';
-        } elseif ($reflection->isFinal()) {
-            $modifier = '!';
+
+    private function getModifiers($reflection)
+    {
+        $signs = '';
+
+        $modifiers = $reflection->getModifiers();
+        $symbols = $this->getModifierSymbols();
+
+        foreach ($symbols as $number => $sign) {
+            if ($number & $modifiers) {
+                $signs .= $sign;
+            }
         }
 
-        $static = $reflection->isStatic() ? '@' : ' ';
-
-        return "$modifier $static";
+        return $signs;
     }
 
     private function locationFunction($name)
