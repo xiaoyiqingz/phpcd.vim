@@ -10,7 +10,7 @@ class PHPCD extends RpcServer
         ReflectionMethod::IS_PRIVATE    => '-',
         ReflectionMethod::IS_PROTECTED  => '#',
         ReflectionMethod::IS_PUBLIC     => '+',
-        ReflectionMethod::IS_STATIC     => ' @'
+        ReflectionMethod::IS_STATIC     => '@'
     ];
 
     public function info($class_name, $pattern, $mode)
@@ -315,7 +315,7 @@ class PHPCD extends RpcServer
 
         return [
             'word' => $name,
-            'abbr' => sprintf("%s\t\t%s", $modifier, $name),
+            'abbr' => sprintf("%3s %s", $modifier, $name),
             'info' => preg_replace('#/?\*(\*|/)?#', '', $property->getDocComment()),
             'kind' => 'p',
             'icase' => 1,
@@ -338,7 +338,7 @@ class PHPCD extends RpcServer
 
         return [
             'word' => $name,
-            'abbr' => sprintf("%s\t\t%s (%s)", $modifier, $name, join(', ', $params)),
+            'abbr' => sprintf("%3s %s (%s)", $modifier, $name, join(', ', $params)),
             'info' => $this->clearDoc($method->getDocComment()),
             'kind' => 'f',
             'icase' => 1,
