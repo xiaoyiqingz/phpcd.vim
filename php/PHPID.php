@@ -144,13 +144,7 @@ class PHPID extends RpcServer
             unset($this->class_map[$class_name]);
             $this->vimUpdateProgressBar();
             require $file_path;
-            list($parent, $interfaces) = $this->getClassInfo($class_name);
-            if ($parent) {
-                $this->updateParentIndex($parent, $class_name);
-            }
-            foreach ($interfaces as $interface) {
-                $this->updateInterfaceIndex($interface, $class_name);
-            }
+            $this->update($class_name);
         }
     }
 
