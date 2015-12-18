@@ -147,6 +147,35 @@ class PHPCD extends RpcServer
      */
     public function functype($class_name, $name)
     {
+        if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+            $type = $this->typeByReturnType($class_name, $name);
+            $this->log($type);
+            if ($type) {
+                return [$type];
+            }
+        }
+
+        return $this->typeByDoc($class_name, $name);
+    }
+
+    private function typeByReturnType($class_name, $name)
+    {
+        try {
+            if ($class_name) {
+                $reflection = new ReflectionClass($class_name);
+                $reflection = $reflection->getMethod($name);
+            } else {
+                $reflection = new ReflectionFunction($name);
+            }
+            $type = $reflection->getReturnType();
+
+            return (string) $type;
+        } catch (ReflectionException $e) {
+            $this->log((string) $e);
+        }
+    }
+
+    private function typeByDoc($class_name, $name) {
         list($path, $doc) = $this->doc($class_name, $name);
         $has_doc = preg_match('/@(return|var)\s+(\S+)/m', $doc, $matches);
         if (!$has_doc) {
