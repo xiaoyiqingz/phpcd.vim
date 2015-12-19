@@ -5,7 +5,7 @@ class PHPCD extends RpcServer
     /**
      *  @param array Map between modifier numbers and displayed symbols
      */
-    private $modifierSymbols = [
+    private $modifier_symbols = [
         ReflectionMethod::IS_FINAL      => '!',
         ReflectionMethod::IS_PRIVATE    => '-',
         ReflectionMethod::IS_PROTECTED  => '#',
@@ -13,12 +13,11 @@ class PHPCD extends RpcServer
         ReflectionMethod::IS_STATIC     => '@'
     ];
 
-
     /**
-     * @param string $is_static
+     * @param string $mode
      * @return bool|null
      */
-    private function translateis_staticInput($is_static)
+    private function translateStaticMode($mode)
     {
         $map = [
             'both'           => null,
@@ -26,14 +25,14 @@ class PHPCD extends RpcServer
             'only_static'    => true
         ];
 
-        return isset($map[$is_static]) ? $map[$is_static] : null;
+        return isset($map[$mode]) ? $map[$mode] : null;
     }
 
-
-    public function info($class_name, $pattern, $is_static = 'both', $publicInfoOnly)
+    public function info($class_name, $pattern, $static_mode = 'both', $public_only)
     {
         if ($class_name) {
-            return $this->classInfo($class_name, $pattern, $this->translateis_staticInput($is_static), $publicInfoOnly);
+            $static_mode = $this->translateStaticMode($static_mode);
+            return $this->classInfo($class_name, $pattern, $static_mode, $public_only);
         }
 
         if ($pattern) {
@@ -246,7 +245,7 @@ class PHPCD extends RpcServer
         'void'     => 1,
     ];
 
-    private function classInfo($class_name, $pattern, $is_static, $publicInfoOnly)
+    private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
         $reflection = new \Reflection\ReflectionClass($class_name);
         $items = [];
@@ -260,7 +259,7 @@ class PHPCD extends RpcServer
             ];
         }
 
-        $methods = $reflection->getAvailableMethods($is_static, $publicInfoOnly);
+        $methods = $reflection->getAvailableMethods($is_static, $public_only);
 
         foreach ($methods as $method) {
             $info = $this->getMethodInfo($method, $pattern);
@@ -389,7 +388,7 @@ class PHPCD extends RpcServer
      */
     private function getModifierSymbols()
     {
-        return $this->modifierSymbols;
+        return $this->modifier_symbols;
     }
 
 
