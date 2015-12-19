@@ -94,7 +94,8 @@ class PHPCD extends RpcServer
                 $reflection = new ReflectionFunction($name);
             }
 
-            $path = ($reflection_class ?: $reflection)->getFileName();
+            $path = $reflection_class ? $reflection_class->getFileName()
+                : $reflection->getFileName();
             $doc = $reflection->getDocComment();
 
             return [$path, $this->clearDoc($doc)];
