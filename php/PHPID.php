@@ -3,6 +3,9 @@
 class PHPID extends RpcServer
 {
     /**
+     * set the composer root dir(containing vendor)
+     *
+     * @param string $root the path
      * @return static
      */
     public function setRoot($root)
@@ -18,8 +21,9 @@ class PHPID extends RpcServer
     }
 
     /**
-     * 更新特定类的继承关系和接口实现关系
-     * @param string $class_name 全限定类名
+     * update index for one class
+     *
+     * @param string $class_name fqdn
      */
     public function update($class_name)
     {
@@ -34,18 +38,21 @@ class PHPID extends RpcServer
     }
 
     /**
-     * 获取接口实现类列表或者抽象类子类
+     * Fetch an interface's implemation list,
+     * or an abstract class's child class.
      *
-     * @param string $name 接口名或者抽象类名
-     * @param bool $is_interface 是否为接口，抽象类则传 true
+     * @param string $name name of interface or abstract class
+     * @param bool $is_abstract_class
      *
      * @return [
      *   'full class name 1',
+     *   'full class name 2',
      * ]
      */
-    public function ls($name, $is_interface = false)
+    public function ls($name, $is_abstract_class = false)
     {
-        $base_path = $is_interface ? $this->getIntefacesDir() : $this->getExtendsDir();
+        $base_path = $is_abstract_class ? $this->getIntefacesDir()
+            : $this->getExtendsDir();
         $path = $base_path . '/' . $this->getIndexFileName($name);
         if (!is_file($path)) {
             return [];
@@ -62,9 +69,10 @@ class PHPID extends RpcServer
     }
 
     /**
-     * 解析 autoload_classmap.php 生成类的继承关系和接口的实现关系
+     * Fetch and save class's interface and parent info
+     * according the autoload_classmap.php file
      *
-     * @param bool $is_force 是否强制重新刷新索引
+     * @param bool $is_force overwrite the exists index
      */
     public function index($is_force = false)
     {

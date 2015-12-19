@@ -28,6 +28,20 @@ class PHPCD extends RpcServer
         return isset($map[$mode]) ? $map[$mode] : null;
     }
 
+    /**
+     * Fetch the completion list.
+     *
+     * If both $class_name and $pattern are setted, it will list the class's
+     * methods, constants, and properties, filted by pattern.
+     *
+     * If only $pattern is setted, it will list all the defined function
+     * (including the PHP's builtin function', filted by pattern.
+     *
+     * @var string $class_name
+     * @var string $pattern
+     * @var string $static_mode see translateStaticMode method
+     * @var bool $public_only
+     */
     public function info($class_name, $pattern, $static_mode = 'both', $public_only)
     {
         if ($class_name) {
@@ -43,12 +57,13 @@ class PHPCD extends RpcServer
     }
 
     /**
-     * 获取函数或者类成员方法的源代码位置（文件路径和行号）
+     * Fetch function or class method's source file path
+     * and their defination line number.
      *
-     * @param string $class_name 类名，传空值则表示函数
-     * @param string $method_name 函数名或者方法名
+     * @param string $class_name class name
+     * @param string $method_name method or function name
      *
-     * @return [ path, line ]
+     * @return [path, line]
      */
     public function location($class_name, $method_name = null)
     {
@@ -70,10 +85,10 @@ class PHPCD extends RpcServer
     }
 
     /**
-     * 获取类成员方法、成员变量或者函数的注释块
+     * Fetch function, class method or class attribute's docblock
      *
-     * @param string $class_name 类名，传空值则表示第二个参数为函数名
-     * @param string $name 函数名或者成员名
+     * @param string $class_name for function set this args to empty
+     * @param string $name
      */
     private function doc($class_name, $name)
     {
@@ -105,9 +120,9 @@ class PHPCD extends RpcServer
     }
 
     /**
-     * 获取 PHP 文件的名称空间和 use 列表
+     * Fetch the php script's namespace and imports(by use) list.
      *
-     * @param string $path 文件路径
+     * @param string $path the php scrpit path
      *
      * @return [
      *   'namespace' => 'ns',
@@ -157,7 +172,16 @@ class PHPCD extends RpcServer
     }
 
     /**
-     * 获取函数或者成员方法的返回值类型
+     * Fetch the function or class method return value's type
+     * and class attribute's type.
+     *
+     * For PHP7 or newer version, it tries to use the return type gramar
+     * to fetch the real return type.
+     *
+     * For PHP5, it use the docblock's return or var annotation to fetch
+     * the type.
+     *
+     * @return [type1, type2]
      */
     public function functype($class_name, $name)
     {
@@ -390,7 +414,6 @@ class PHPCD extends RpcServer
     {
         return $this->modifier_symbols;
     }
-
 
     private function getModifiers($reflection)
     {
