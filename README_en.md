@@ -1,3 +1,6 @@
+- [中文](./README.md)
+- English
+
 [![asciicast](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx.png)](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx)
 
 ## Introduction
@@ -31,7 +34,7 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
 ### System requirement
 
  1. PHP 5.3+
- 2. [socket](http://php.net/manual/en/book.sockets.php) Extension
+ 2. ~~[socket](http://php.net/manual/en/book.sockets.php) Extension~~
  3. [PCNTL](http://php.net/manual/en/book.pcntl.php) Extension
  4. [Msgpack 0.5.7+](https://github.com/msgpack/msgpack-php) Extension
  5. [NeoVim](http://neovim.io/)

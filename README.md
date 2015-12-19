@@ -1,4 +1,5 @@
-[English](./README_en.md)
+- 中文
+- [English](./README_en.md)
 
 [![asciicast](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx.png)](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx)
 
@@ -29,7 +30,7 @@ PHPCD 目前只能配合[NeoVim](http://neovim.io/)工作，这是一个艰难�
 
 ### 环境要求
  1. PHP 5.3+
- 2. [socket](http://php.net/manual/en/book.sockets.php) 扩展
+ 2. ~~[socket](http://php.net/manual/en/book.sockets.php) 扩展~~
  3. [PCNTL](http://php.net/manual/en/book.pcntl.php) 扩展
  4. [Msgpack 0.5.7+](https://github.com/msgpack/msgpack-php) 扩展
  5. [Composer](https://getcomposer.org/) 支持
