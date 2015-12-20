@@ -45,7 +45,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		let winheight = winheight(0)
 		let winnr = winnr()
 
-		let [current_namespace, imports] = phpcd#GetCurrentNameSpace(getline(0, line('.')))
+		let [current_namespace, imports] = phpcd#GetCurrentNameSpace()
 
 		if context =~? '^use\s' || context ==? 'use' " {{{
 			" TODO complete use
@@ -163,7 +163,7 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let context = substitute(current_instruction, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
 
-	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace(getline(0, line('.')))
+	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace()
 	let [symbol, symbol_namespace] = phpcd#ExpandClassName(word, current_namespace, current_imports)
 
 	return [symbol, context, symbol_namespace, current_imports]
@@ -1030,7 +1030,7 @@ function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 	return phpcd#SelectOne(valid_types)
 endfunction " }}}
 
-function! phpcd#GetCurrentNameSpace(file_lines) " {{{
+function! phpcd#GetCurrentNameSpace() " {{{
 	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 
 	let imports = {}
