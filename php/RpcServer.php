@@ -6,6 +6,9 @@ class RpcServer
     const TYPE_RESPONSE = 1;
     const TYPE_NOTIFICATION = 2;
 
+    const DIRECTION_IN = 0;
+    const DIRECTION_OUT = 1;
+
     private $msg_id = 0;
 
     private $current_msg_id;
@@ -63,6 +66,8 @@ class RpcServer
 
     private function onMessage($message)
     {
+        $this->rpcLog(self::DIRECTION_IN, $message);
+
         $type = current($message);
         switch ($type) {
         case self::TYPE_REQUEST:
@@ -79,7 +84,6 @@ class RpcServer
 
     private function onRequest($message)
     {
-        $this->log("recv request", $message);
         list($type, $msg_id, $method, $params) = $message;
 
         $this->current_msg_id = $msg_id;
@@ -89,7 +93,6 @@ class RpcServer
         if (method_exists($this, $method)) {
             $result = $this->doRequest([$this, $method], $params);
         } else {
-            $this->log($method . " not exists");
             $error = 'method not exists';
         }
         $response = [self::TYPE_RESPONSE, $msg_id, $error, $result];
@@ -100,14 +103,12 @@ class RpcServer
 
     private function onResponse($message)
     {
-        $this->log("recv response", $message);
         list($type, $msg_id, $error, $result) = $message;
         $this->doCallback($msg_id, $error, $result);
     }
 
     private function onNotification($message)
     {
-        $this->log("recv notice", $message);
         list($type, $method, $params) = $message;
         if (method_exists($this, $method)) {
             $this->doRequest([$this, $method], $params);
@@ -152,15 +153,27 @@ class RpcServer
         return $this->msg_id++;
     }
 
-    private function write($data)
+    private function write($message)
     {
-        $this->log("write", $data);
-        fwrite(STDOUT, msgpack_pack($data));
+        $this->rpcLog(self::DIRECTION_OUT, $message);
+        fwrite(STDOUT, msgpack_pack($message));
     }
 
     protected function log($log, $context = [])
     {
         $log = $log . '#' . json_encode($context, JSON_PRETTY_PRINT) . PHP_EOL;
+        fwrite($this->log_file, $log);
+    }
+
+    private function rpcLog($direction, $message)
+    {
+        if ($direction === self::DIRECTION_IN) {
+            $log = '[RPC][NeoVim -> PHPCD ]: ';
+        } else {
+            $log = '[RPC][PHPCD  -> NeoVim]: ';
+        }
+
+        $log = $log . json_encode($message) . PHP_EOL;
         fwrite($this->log_file, $log);
     }
 }
