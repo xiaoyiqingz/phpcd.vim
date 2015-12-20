@@ -12,8 +12,12 @@ class RpcServer
 
     private $request_callback = [];
 
+    private $log_file;
+
     public function __construct()
     {
+        $log_path = getenv('HOME') . '/.phpcd.log';
+        $this->log_file = fopen($log_path, 'a');
         $this->unpacker = new MessagePackUnpacker;
 
         register_shutdown_function([$this, 'shutdown']);
@@ -157,6 +161,6 @@ class RpcServer
     protected function log($log, $context = [])
     {
         $log = $log . '#' . json_encode($context, JSON_PRETTY_PRINT) . PHP_EOL;
-        fwrite(STDERR, $log);
+        fwrite($this->log_file, $log);
     }
 }
