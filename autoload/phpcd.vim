@@ -733,7 +733,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			" function declaration line
 			if line =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(' " {{{
 				let function_lines = join(reverse(copy(lines)), " ")
-				" search for type hinted arguments
+				" search for type hinted arguments {{{
 				if function_lines =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(.\{-}'.class_name_pattern.'\s\+'.object && !object_is_array
 					let f_args = matchstr(function_lines, '\cfunction\(\s\+'.function_name_pattern.'\)\?\s*(\zs.\{-}\ze)')
 					let args = split(f_args, '\s*\zs,\ze\s*')
@@ -747,9 +747,9 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 					if classname_candidate != ''
 						break
 					endif
-				endif
+				endif " }}}
 
-				" search for docblock for the function
+				" search for docblock for the function {{{
 				let match_line = substitute(line, '\\', '\\\\', 'g')
 				let sccontent = getline(0, a:start_line - i)
 				let doc_str = phpcd#GetDocBlock(sccontent, match_line)
@@ -765,7 +765,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 					if classname_candidate != ''
 						break
 					endif
-				endif
+				endif " }}}
 			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
