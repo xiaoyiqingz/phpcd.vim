@@ -59,7 +59,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 
 			let is_static = 'only_nonstatic'
 
-			if strridx(context, '::') > 0
+			if strridx(context, '::') == strlen(context) - 2 " context =~ '::$'
 				if stridx(context, 'parent') != 0
 					let is_static = 'only_static'
 				else
