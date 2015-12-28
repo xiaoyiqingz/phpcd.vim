@@ -292,11 +292,7 @@ class PHPCD extends RpcServer
             }
         }
 
-        if ($is_static) {
-            $properties = $reflection->getProperties(ReflectionProperty::IS_STATIC);
-        } else {
-            $properties = $reflection->getProperties();
-        }
+        $properties = $reflection->getAvailableProperties($is_static, $public_only);
 
         foreach ($properties as $property) {
             $info = $this->getPropertyInfo($property, $pattern);
