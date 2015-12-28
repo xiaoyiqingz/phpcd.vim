@@ -274,13 +274,15 @@ class PHPCD extends RpcServer
         $reflection = new \Reflection\ReflectionClass($class_name);
         $items = [];
 
-        foreach ($reflection->getConstants() as $name => $value) {
-            $items[] = [
-                'word' => $name,
-                'abbr' => "+ @ $name = $value",
-                'kind' => 'd',
-                'icase' => 1,
-            ];
+        if (false !== $is_static) {
+            foreach ($reflection->getConstants() as $name => $value) {
+                $items[] = [
+                    'word' => $name,
+                    'abbr' => "+ @ $name = $value",
+                    'kind' => 'd',
+                    'icase' => 1,
+                ];
+            }
         }
 
         $methods = $reflection->getAvailableMethods($is_static, $public_only);
