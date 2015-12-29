@@ -53,7 +53,7 @@ class ReflectionClass extends \ReflectionClass
     private function filter($element, $static, $public_only)
     {
         if (!$element instanceof \ReflectionMethod && !$element instanceof \ReflectionProperty) {
-            throw new InvalidArgumentException(
+            throw new \InvalidArgumentException(
                 'Parameter must be a member of ReflectionMethod or ReflectionProperty class'
             );
         }
