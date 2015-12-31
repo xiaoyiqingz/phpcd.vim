@@ -307,7 +307,6 @@ class PHPCD extends RpcServer
         if (false !== $is_static) {
             foreach ($reflection->getConstants() as $name => $value) {
                 if (!$pattern || $this->matchPattern($pattern, $name)) {
-                    $this->log($pattern);
                     $items[] = [
                         'word' => $name,
                         'abbr' => sprintf(" +@ %s %s", $name, $value),
