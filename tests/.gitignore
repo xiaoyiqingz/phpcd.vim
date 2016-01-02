@@ -1,4 +1,3 @@
-vimunit
 /fixtures/vendor
 log.txt-*
 outTestCase_*
