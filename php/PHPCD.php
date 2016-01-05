@@ -163,6 +163,9 @@ class PHPCD extends RpcServer
      */
     public function nsuse($path)
     {
+        // use require to check syntax error :)
+        require $path;
+
         $file = new SplFileObject($path);
         $s = [
             'namespace' => '',
