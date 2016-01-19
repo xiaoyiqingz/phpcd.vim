@@ -164,7 +164,11 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
 
 	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace()
-	let [symbol, symbol_namespace] = phpcd#ExpandClassName(word, current_namespace, current_imports)
+	if word != ''
+		let [symbol, symbol_namespace] = phpcd#ExpandClassName(word, current_namespace, current_imports)
+	else
+		let [symbol, symbol_namespace] = [word, current_namespace]
+	endif
 
 	return [symbol, context, symbol_namespace, current_imports]
 endfunction " }}}
@@ -464,10 +468,8 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', full_classname, method)
 		if len(return_types) > 0
 			let return_type = phpcd#SelectOne(return_types)
-			let [classname_candidate, class_candidate_namespace] = s:SplitClassName(return_type)
 
-			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
-				return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, a:imports, methodstack)
+			return phpcd#GetCallChainReturnType(return_type, '', a:imports, methodstack)
 		endif
 	endif " }}}
 
@@ -634,11 +636,8 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', '', function_name)
 		if len(return_types) > 0
 			let return_type = phpcd#SelectOne(return_types)
-			let [classname_candidate, class_candidate_namespace] = s:SplitClassName(return_type)
-
-			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-			" return absolute classname, without leading \
-			return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
+			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(return_type, '', class_candidate_imports, methodstack)
+			return class_candidate_namespace.'\'.classname_candidate
 		endif " }}}
 	else " {{{
 		" extract the variable name from the context
@@ -1077,60 +1076,24 @@ function! phpcd#GetCurrentFunctionBoundaries() " {{{
 endfunction " }}}
 
 function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
-	" if there's an imported class, just use that class's information
-	if has_key(a:imports, a:classname) && !(a:current_namespace =~ a:classname.'$')
-		let full_classname = a:imports[a:classname].name
-		let classname_parts = split(full_classname, '\\\+')
-		let namespace = join(classname_parts[0:-2], '\')
-		let classname = classname_parts[-1]
-		return [classname, namespace]
-	endif
-
-	" try to find relative namespace in imports, imported names takes precedence over
-	" current namespace when resolving relative namespaced class names
-	if stridx(a:classname, '\') > 0
-		let classname_parts = split(a:classname, '\\\+')
-		if has_key(a:imports, classname_parts[0])
-			let classname_parts[0] = a:imports[classname_parts[0]].name
-			let namespace = join(classname_parts[0:-2], '\')
-			let classname = classname_parts[-1]
-			return [classname, namespace]
-		endif
-	endif
-
-	" no imported class or namespace matched, expand with the current namespace
-	let namespace = ''
-	let classname = a:classname
-	" if the classname have namespaces in in or we are in a namespace
-	if a:classname =~ '\\' || (a:current_namespace != '\' && a:current_namespace != '')
-		" add current namespace to the a:classname
-		if a:classname !~ '^\'
-			let classname = a:current_namespace.'\'.substitute(a:classname, '^\\', '', '')
+	if a:classname[0] == '\'
+		let last_slash_pos = strridx(a:classname, '\')
+		if last_slash_pos <= 0
+			return [a:classname[1:], '\']
 		else
-			" remove leading \, tag files doesn't have those
-			let classname = substitute(a:classname, '^\\', '', '')
-		endif
-		" split classname to classname and namespace
-		let classname_parts = split(classname, '\\\+')
-		if len(classname_parts) > 1
-			let namespace = join(classname_parts[0:-2], '\')
-			let classname = classname_parts[-1]
+			return [a:classname[last_slash_pos+1:], a:classname[:last_slash_pos-1]]
 		endif
 	endif
-	return [classname, namespace]
-endfunction " }}}
 
-function! s:SplitClassName(name) " {{{
-	let parts = split(a:name, '\\\+')
-
-	if len(parts) > 1
-		let namespace = join(parts[0:-2], '\')
-		let classname = parts[-1]
+	let parts = split(a:classname, '\\\+')
+	if has_key(a:imports, parts[0])
+		let parts[0] = a:imports[parts[0]].name
 	else
-		let namespace = '\'
-		let classname = a:name
+		call insert(parts, a:current_namespace, 0)
 	endif
 
+	let classname = parts[-1]
+	let namespace = join(parts[0:-2], '\')
 	return [classname, namespace]
 endfunction " }}}
 
@@ -1138,8 +1101,8 @@ function! phpcd#GetCallChainReturnTypeAt(line) " {{{
 	silent! below 1sp
 	exec 'normal! ' . a:line . 'G'
 	call search(';')
-	let [symbol, symbol_context, symbol_namespace, current_imports] = phpcd#GetCurrentSymbolWithContext()
-	let classname = phpcd#GetClassName(line('.'), symbol_context, symbol_namespace, current_imports)
+	let [_, context, namespace, imports] = phpcd#GetCurrentSymbolWithContext()
+	let classname = phpcd#GetClassName(line('.'), context, namespace, imports)
 	q
 	return classname
 endfunction " }}}
