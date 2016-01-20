@@ -184,16 +184,16 @@ class PHPCD extends RpcServer
             } elseif (strtolower(substr($line, 0, 3) == 'use')) {
                 $as_pos = strripos($line, ' as ');
                 if ($as_pos !== false) {
-                    $alias = $this->trim(substr($line, $as_pos + 3, -1));
-                    $s['imports'][$alias] = $this->trim(substr($line, 3, $as_pos - 3));
+                    $alias = self::trim(substr($line, $as_pos + 3, -1));
+                    $s['imports'][$alias] = self::trim(substr($line, 3, $as_pos - 3));
                 } else {
                     $slash_pos = strripos($line, '\\');
                     if ($slash_pos === false) {
-                        $alias = $this->trim(substr($line, 4, -1));
+                        $alias = self::trim(substr($line, 4, -1));
                     } else {
-                        $alias = $this->trim(substr($line, $slash_pos + 1, -1));
+                        $alias = self::trim(substr($line, $slash_pos + 1, -1));
                     }
-                    $s['imports'][$alias] = $this->trim(substr($line, 4, -1));
+                    $s['imports'][$alias] = self::trim(substr($line, 4, -1));
                 }
             }
         }
@@ -203,7 +203,7 @@ class PHPCD extends RpcServer
 
     private static function trim($str)
     {
-        return trim($str, "\t\n\r\0\x0B\\");
+        return trim($str, "\t\n\r\0\x0B\\ ");
     }
 
     /**
