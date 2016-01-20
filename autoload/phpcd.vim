@@ -625,6 +625,12 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		end " }}}
 		return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack) " }}}
 	elseif get(methodstack, 0) =~# function_invocation_pattern " {{{
+		" just for laravel {{{
+		let laravel_interface = matchstr(methodstack[0], '^app(\zs.\+\ze::class)$')
+		if laravel_interface != ''
+			let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(laravel_interface, a:current_namespace, a:imports)
+			return class_candidate_namespace . '\' . classname_candidate
+		endif " }}}
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
 		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', '', function_name)
 		if len(return_types) > 0
