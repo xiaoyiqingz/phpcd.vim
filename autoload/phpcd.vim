@@ -455,23 +455,20 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 		endif
 	endif " }}}
 
-	if (len(methodstack) == 1) " {{{
+	if (len(methodstack) == 1)
 		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
-		return [classname_candidate, class_candidate_namespace] " }}}
-	else " {{{
-		call remove(methodstack, 0)
-		let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
-
-		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
-
-		let full_classname = class_candidate_namespace . '\' . classname_candidate
-		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', full_classname, method)
-		if len(return_types) > 0
-			let return_type = phpcd#SelectOne(return_types)
-
-			return phpcd#GetCallChainReturnType(return_type, '', a:imports, methodstack)
-		endif
+		return class_candidate_namespace . '\' . classname_candidate
 	endif " }}}
+
+	call remove(methodstack, 0)
+	let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
+	let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
+	let full_classname = class_candidate_namespace . '\' . classname_candidate
+	let return_types = rpcrequest(g:phpcd_channel_id, 'functype', full_classname, method)
+	if len(return_types) > 0
+		let return_type = phpcd#SelectOne(return_types)
+		return phpcd#GetCallChainReturnType(return_type, '', a:imports, methodstack)
+	endif
 
 	return unknown_result
 endfunction " }}}
@@ -576,9 +573,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 				let classname_candidate = a:context =~? 'parent::' ? extended_class : class_name
 				if classname_candidate != ''
-					let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-					" return absolute classname, without leading \
-					return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
+					return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 				endif
 			endif
 
@@ -628,16 +623,13 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let i += 1
 			endwhile
 		end " }}}
-		let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-		" return absolute classname, without leading \
-		return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate " }}}
+		return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack) " }}}
 	elseif get(methodstack, 0) =~# function_invocation_pattern " {{{
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
 		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', '', function_name)
 		if len(return_types) > 0
 			let return_type = phpcd#SelectOne(return_types)
-			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(return_type, '', class_candidate_imports, methodstack)
-			return class_candidate_namespace.'\'.classname_candidate
+			return phpcd#GetCallChainReturnType(return_type, '', class_candidate_imports, methodstack)
 		endif " }}}
 	else " {{{
 		" extract the variable name from the context
@@ -680,14 +672,12 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		endif " }}}
 
 		if classname_candidate != '' " {{{
-			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-			" return absolute classname, without leading \
-			return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
+			return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 		endif " }}}
 
-		" scan the file backwards from the current line
+		" scan the file backwards from the current line {{{
 		let i = 1
-		for line in lines " {{{
+		for line in lines
 			" do in-file lookup of $var = new Class or $var = new [s|S]tatic
 			if line =~# '^\s*'.object.'\s*=\s*new\s\+'.class_name_pattern && !object_is_array " {{{
 				let classname_candidate = matchstr(line, object.'\c\s*=\s*new\s*\zs'.class_name_pattern.'\ze')
@@ -865,9 +855,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		endfor " }}}
 
 		if classname_candidate != '' " {{{
-			let [classname_candidate, class_candidate_namespace] = phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-			" return absolute classname, without leading \
-			return (class_candidate_namespace == '\' || class_candidate_namespace == '') ? classname_candidate : class_candidate_namespace.'\'.classname_candidate
+			return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 		endif " }}}
 	endif " }}}
 endfunction " }}}
