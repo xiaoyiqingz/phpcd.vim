@@ -455,7 +455,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 		endif
 	endif " }}}
 
-	if (len(methodstack) == 1)
+	if (len(methodstack) == 1) " {{{
 		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, a:imports)
 		return class_candidate_namespace . '\' . classname_candidate
 	endif " }}}
