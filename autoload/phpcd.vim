@@ -117,7 +117,13 @@ function! phpcd#JumpToDefinition(mode) " {{{
 		let edit_cmd = a:mode . " +"
 	endif
 
-	silent! execute edit_cmd . symbol_line . ' ' . symbol_file
+	if str2nr(symbol_line) > 0
+		silent! execute edit_cmd . symbol_line . ' ' . symbol_file
+	else
+		silent! execute edit_cmd . '1 ' . symbol_file
+		silent! call search(symbol_line)
+	endif
+
 	silent! execute "normal! zt"
 	normal! zv
 	normal! zz
