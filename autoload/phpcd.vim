@@ -215,6 +215,12 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 				return [path, line, 0]
 			endif
 		endif " }}}
+	elseif a:symbol_context =~ '\/' " {{{
+		let path = matchstr(getline('.'), 'require\s*__DIR__\s*\.\s*\zs.*\ze;')
+		let cwd = expand('%:p:h')
+		let path = cwd.substitute(path, "'", '', 'g')
+		let path = fnamemodify(path, ':p:.')
+		return [path, '$', 0] "}}}
 	else " {{{
 		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
