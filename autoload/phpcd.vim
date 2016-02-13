@@ -216,7 +216,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			endif
 		endif " }}}
 	elseif a:symbol_context =~ '\/' " {{{
-		let path = matchstr(getline('.'), 'require\s*__DIR__\s*\.\s*\zs.*\ze;')
+		let path = matchstr(getline('.'), '\(require\|include\)\(_once\)\?\s*__DIR__\s*\.\s*\zs.*\ze;')
 		let cwd = expand('%:p:h')
 		let path = cwd.substitute(path, "'", '', 'g')
 		let path = fnamemodify(path, ':p:.')
@@ -737,8 +737,8 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			end " }}}
 
-			if line =~# '^\s*'.object.'\s*=\s*require.*' && !object_is_array " {{{
-				let path = matchstr(line, 'require\s*__DIR__\s*\.\s*\zs.*\ze;')
+			if line =~# '^\s*'.object.'\s*=\s*\(require\|include\).*' && !object_is_array " {{{
+				let path = matchstr(line, '\(require\|include\)\(_once\)\?\s*__DIR__\s*\.\s*\zs.*\ze;')
 				let cwd = expand('%:p:h')
 				let path = cwd.substitute(path, "'", '', 'g')
 				let path = fnamemodify(path, ':p:.')
