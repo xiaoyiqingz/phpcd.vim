@@ -579,8 +579,8 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				return ''
 			endif
 
-			if line =~? '\v^\s*(abstract\s+|final\s+)*\s*class\s'
-				let class_name = matchstr(line, '\cclass\s\+\zs'.class_name_pattern.'\ze')
+			if line =~? '\v^\s*(abstract\s+|final\s+)*\s*(class|trait)\s'
+				let class_name = matchstr(line, '\c\(class\|trait\)\s\+\zs'.class_name_pattern.'\ze')
 				let extended_class = matchstr(line, '\cclass\s\+'.class_name_pattern.'\s\+extends\s\+\zs'.class_name_pattern.'\ze')
 
 				let classname_candidate = a:context =~? 'parent::' ? extended_class : class_name
