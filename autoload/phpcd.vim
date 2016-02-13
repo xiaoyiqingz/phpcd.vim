@@ -737,6 +737,21 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			end " }}}
 
+			if line =~# '^\s*'.object.'\s*=\s*require.*' && !object_is_array " {{{
+				let path = matchstr(line, 'require\s*__DIR__\s*\.\s*\zs.*\ze;')
+				let cwd = expand('%:p:h')
+				let path = cwd.substitute(path, "'", '', 'g')
+				let path = fnamemodify(path, ':p:.')
+
+				silent! below 1sp
+				exec 'e +$ ' . path
+				call search(';')
+				let [symbol, context, namespace, imports] = phpcd#GetCurrentSymbolWithContext()
+				let classname = phpcd#GetClassName(line('.'), symbol.'->', namespace, imports)
+				q
+				return classname
+			endif " }}}
+
 			" function declaration line
 			if line =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(' " {{{
 				let function_lines = join(reverse(copy(lines)), " ")
