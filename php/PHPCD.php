@@ -105,7 +105,7 @@ class PHPCD extends RpcServer
                         $reflection = $reflection->getMethod($method_name);
                     } elseif ($reflection->hasConstant($method_name)) {
                         // 常量则返回 [ path, 'const CONST_NAME' ]
-                        return [$reflection->getFileName(), 'const ' . $method_name];
+                        return [$this->getConstPath($method_name, $reflection), 'const ' . $method_name];
                     }
                 }
             } else {
@@ -116,6 +116,21 @@ class PHPCD extends RpcServer
         } catch (ReflectionException $e) {
             return ['', null];
         }
+    }
+
+    private function getConstPath($const_name, ReflectionClass $reflection)
+    {
+        $path = $reflection->getFileName();
+
+        while ($reflection = $reflection->getParentClass()) {
+            if ($reflection->hasConstant($const_name)) {
+                $path = $reflection->getFileName();
+            } else {
+                break;
+            }
+        }
+
+        return $path;
     }
 
     /**
