@@ -2,6 +2,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:phpcd_need_update = 0
+let g:phpcd_channel_id = -1
+let g:phpid_channel_id = -1
 
 function! GetComposerRoot() " {{{
 	let root = getcwd()
