@@ -190,7 +190,7 @@ class PHPCD extends RpcServer
             'class' => '',
         ];
         foreach ($file as $line) {
-            if (preg_match('/\b(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
+            if (preg_match('/^\s*\b(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
                 $s['class'] = $matches[2];
                 break;
             }
