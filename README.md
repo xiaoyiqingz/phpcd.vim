@@ -5,6 +5,8 @@
 
 ## 简介
 
+[![Join the chat at https://gitter.im/phpvim/phpcd.vim](https://badges.gitter.im/phpvim/phpcd.vim.svg)](https://gitter.im/phpvim/phpcd.vim?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 PHPCD，全称 PHP Completion Daemon，译为 PHP 补全服务。PHPCD 实现了 Vim 的 omni 补全接口，提供 PHP 相关的智能补全和定义跳转服务。
 
 PHPCD 的 VimL 部分基于[phpcomplete.vim](https://github.com/shawncplus/phpcomplete.vim)，感谢原项目贡献者的努力。原项目的 3k+ 行代码已经被裁剪为 1.5k 行，可维护性大为增强。
