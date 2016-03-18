@@ -2,18 +2,6 @@
 
 class PHPID extends RpcServer
 {
-    /**
-     * set the composer root dir(containing vendor)
-     *
-     * @param string $root the path
-     * @return static
-     */
-    public function setRoot($root)
-    {
-        $this->root = $root;
-        return $this;
-    }
-
     public function loop()
     {
         $this->index();

@@ -6,7 +6,6 @@ class PHPCD extends RpcServer
     const MATCH_HEAD        = 'match_head';
 
     private $matchType;
-    private $root;
 
     /**
      * Set type of matching
@@ -27,8 +26,7 @@ class PHPCD extends RpcServer
 
     public function __construct($root)
     {
-        $this->root = $root;
-        parent::__construct();
+        parent::__construct($root);
 
         /** Set default match type **/
         $this->setMatchType(self::MATCH_SUBSEQUENCE);

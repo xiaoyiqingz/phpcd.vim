@@ -17,13 +17,32 @@ class RpcServer
 
     private $log_file;
 
-    public function __construct()
+    /**
+     * Composer root dir(containing vendor)
+     */
+    protected $root;
+
+    public function __construct($root)
     {
+        $this->setRoot($root);
         $log_path = getenv('HOME') . '/.phpcd.log';
         $this->log_file = fopen($log_path, 'a');
         $this->unpacker = new MessagePackUnpacker;
 
         register_shutdown_function([$this, 'shutdown']);
+    }
+
+    /**
+     * Set the composer root dir
+     *
+     * @param string $root the path
+     * @return static
+     */
+    protected function setRoot($root)
+    {
+        // @TODO do we need to validate this input variable?
+        $this->root = $root;
+        return $this;
     }
 
     public function loop()
