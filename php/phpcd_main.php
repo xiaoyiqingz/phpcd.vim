@@ -7,4 +7,4 @@ require __DIR__ . '/RpcServer.php';
 require __DIR__ . '/PHPCD.php';
 require __DIR__ . '/Reflection/ReflectionClass.php';
 
-(new PHPCD)->loop();
+(new PHPCD($argv[1]))->loop();

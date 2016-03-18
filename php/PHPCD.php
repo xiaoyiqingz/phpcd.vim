@@ -6,6 +6,7 @@ class PHPCD extends RpcServer
     const MATCH_HEAD        = 'match_head';
 
     private $matchType;
+    private $root;
 
     /**
      * Set type of matching
@@ -24,8 +25,9 @@ class PHPCD extends RpcServer
         return null;
     }
 
-    public function __construct()
+    public function __construct($root)
     {
+        $this->root = $root;
         parent::__construct();
 
         /** Set default match type **/
@@ -515,5 +517,43 @@ class PHPCD extends RpcServer
     {
         $doc = preg_replace('/[ \t]*\* ?/m','', $doc);
         return preg_replace('#\s*\/|/\s*#','', $doc);
+    }
+
+    /**
+     * generate psr4 namespace according composer.json and file path
+     */
+    public function psr4ns($path)
+    {
+        $dir = dirname($path);
+
+        $composer_path = $this->root . '/composer.json';
+        $composer = json_decode(file_get_contents($composer_path), true);
+
+        $list = (array) @$composer['autoload']['psr-4'];
+        foreach ((array) @$composer['autoload-dev']['psr-4'] as $namespace => $paths) {
+            if (isset($list[$namespace])) {
+                $list[$namespace] = ((array)$list[$namespace]) + ((array) $paths);
+            } else {
+                $list[$namespace] = (array) $paths;
+            }
+        }
+
+        $namespaces = [];
+        foreach ($list as $namespace => $paths) {
+            foreach ((array)$paths as $path) {
+                $path = realpath($this->root.'/'.$path);
+                if (strpos($dir, $path) === 0) {
+                    $sub_path = str_replace($path, '', $dir);
+                    $sub_path = str_replace('/', '\\', $sub_path);
+                    $sub_namespace = trim(ucwords($sub_path, '\\'), '\\');
+                    if ($sub_namespace) {
+                        $sub_namespace = '\\' . $sub_namespace;
+                    }
+                    $namespaces[] = trim($namespace, '\\').$sub_namespace;
+                }
+            }
+        }
+
+        return $namespaces;
     }
 }

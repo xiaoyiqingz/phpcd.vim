@@ -44,6 +44,13 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	try " {{{
 		let winheight = winheight(0)
 		let winnr = winnr()
+		if context =~? '^namespace'
+			return phpcd#GetPsrNamespace()
+		endif
+
+		if context =~? '\v^(abstract\s+)?(class|interface|trait)'
+			return [expand('%:t:r')]
+		end
 
 		let [current_namespace, imports] = phpcd#GetCurrentNameSpace()
 
@@ -88,6 +95,10 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	finally
 		silent! exec winnr.'resize '.winheight
 	endtry " }}}
+endfunction " }}}
+
+function! phpcd#GetPsrNamespace() " {{{
+	return rpcrequest(g:phpcd_channel_id, 'psr4ns', expand('%:p'))
 endfunction " }}}
 
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
