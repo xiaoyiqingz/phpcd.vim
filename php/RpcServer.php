@@ -22,12 +22,16 @@ class RpcServer
      */
     protected $root;
 
-    public function __construct($root)
-    {
+    private $unpacker;
+
+    public function __construct(
+        $root,
+        MessagePackUnpacker $unpacker
+    ) {
         $this->setRoot($root);
         $log_path = getenv('HOME') . '/.phpcd.log';
         $this->log_file = fopen($log_path, 'a');
-        $this->unpacker = new MessagePackUnpacker;
+        $this->unpacker = $unpacker;
 
         register_shutdown_function([$this, 'shutdown']);
     }

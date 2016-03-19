@@ -24,9 +24,11 @@ class PHPCD extends RpcServer
         return null;
     }
 
-    public function __construct($root)
-    {
-        parent::__construct($root);
+    public function __construct(
+        $root,
+        MessagePackUnpacker $unpacker
+    ) {
+        parent::__construct($root, $unpacker);
 
         /** Set default match type **/
         $this->setMatchType(self::MATCH_SUBSEQUENCE);
