@@ -11,5 +11,7 @@
             "php"
         ]
     },
-    "require": {}
+    "require": {
+        "psr/log": "dev-master"
+    }
 }
