@@ -45,11 +45,10 @@ if g:phpcd_channel_id != -1
 endif
 let g:phpcd_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root, 'PHPCD'])
 
-let phpid_path = expand('<sfile>:p:h:h') . '/php/main.php'
 if g:phpid_channel_id != -1
 	call rpcstop(g:phpid_channel_id)
 endif
-let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpid_path, root, 'PHPID'])
+let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root, 'PHPID'])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
