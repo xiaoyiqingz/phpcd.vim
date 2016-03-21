@@ -66,6 +66,11 @@ autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
 
 First, run `composer update` to install all packages and generate the autoload file.
 
+The default PHP command used to run PHP parts of daemon is simply `php`. You may override it by assigning `g:phpcd_php_cli_executable` another value in your `vimrc`, for example:
+```
+let g:phpcd_php_cli_executable = 'php7.0'
+```
+
 Then, use NeoVim to open a php file. You will see a progress bar several seconds later.
 When the bar finish, you could enjoy you PHP coding.
 

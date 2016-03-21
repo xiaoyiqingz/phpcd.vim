@@ -3,6 +3,10 @@ set cpo&vim
 
 let g:phpcd_root = '/'
 
+if !exists('g:phpcd_php_cli_executable')
+	let g:phpcd_php_cli_executable = 'php'
+endif
+
 function! GetComposerRoot() " {{{
 	let root = expand("%:p:h")
 
@@ -39,14 +43,13 @@ let phpcd_path = expand('<sfile>:p:h:h') . '/php/phpcd_main.php'
 if g:phpcd_channel_id != -1
 	call rpcstop(g:phpcd_channel_id)
 endif
-let g:phpcd_channel_id = rpcstart('php', [phpcd_path, root])
+let g:phpcd_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root])
 
 let phpid_path = expand('<sfile>:p:h:h') . '/php/phpid_main.php'
 if g:phpid_channel_id != -1
 	call rpcstop(g:phpid_channel_id)
 endif
-let g:phpid_channel_id = rpcstart('php', [phpid_path, root])
-
+let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpid_path, root])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
