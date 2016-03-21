@@ -7,4 +7,4 @@ require $root . '/vendor/autoload.php';
 require __DIR__ . '/RpcServer.php';
 require __DIR__ . '/PHPID.php';
 
-(new PHPID)->setRoot($root)->loop();
+(new PHPID($root))->loop();
