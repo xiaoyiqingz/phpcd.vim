@@ -17,7 +17,7 @@ try {
             require __DIR__ . '/PHPID.php';
             break;
         default:
-            throw new InvalidArgumentException('The second parameter should be PHPCD or PHPID');
+            throw new \InvalidArgumentException('The second parameter should be PHPCD or PHPID');
     }
 
     $unpacker = new \MessagePackUnpacker;

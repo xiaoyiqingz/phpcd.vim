@@ -26,7 +26,7 @@ class PHPCD extends RpcServer
 
     public function __construct(
         $root,
-        MessagePackUnpacker $unpacker
+        \MessagePackUnpacker $unpacker
     ) {
         parent::__construct($root, $unpacker);
 
@@ -38,11 +38,11 @@ class PHPCD extends RpcServer
      *  @param array Map between modifier numbers and displayed symbols
      */
     private $modifier_symbols = [
-        ReflectionMethod::IS_FINAL      => '!',
-        ReflectionMethod::IS_PRIVATE    => '-',
-        ReflectionMethod::IS_PROTECTED  => '#',
-        ReflectionMethod::IS_PUBLIC     => '+',
-        ReflectionMethod::IS_STATIC     => '@'
+        \ReflectionMethod::IS_FINAL      => '!',
+        \ReflectionMethod::IS_PRIVATE    => '-',
+        \ReflectionMethod::IS_PROTECTED  => '#',
+        \ReflectionMethod::IS_PUBLIC     => '+',
+        \ReflectionMethod::IS_STATIC     => '@'
     ];
 
     /**
@@ -101,7 +101,7 @@ class PHPCD extends RpcServer
     {
         try {
             if ($class_name) {
-                $reflection = new ReflectionClass($class_name);
+                $reflection = new \ReflectionClass($class_name);
                 if ($method_name) {
                     if ($reflection->hasMethod($method_name)) {
                         $reflection = $reflection->getMethod($method_name);
@@ -111,16 +111,16 @@ class PHPCD extends RpcServer
                     }
                 }
             } else {
-                $reflection = new ReflectionFunction($method_name);
+                $reflection = new \ReflectionFunction($method_name);
             }
 
             return [$reflection->getFileName(), $reflection->getStartLine()];
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             return ['', null];
         }
     }
 
-    private function getConstPath($const_name, ReflectionClass $reflection)
+    private function getConstPath($const_name, \ReflectionClass $reflection)
     {
         $path = $reflection->getFileName();
 
@@ -146,7 +146,7 @@ class PHPCD extends RpcServer
         try {
             $reflection_class = null;
             if ($class_name) {
-                $reflection = new ReflectionClass($class_name);
+                $reflection = new \ReflectionClass($class_name);
                 if ($reflection->hasProperty($name)) {
                     $reflection_class = $reflection;
                     // ReflectionProperty does not have the getFileName method
@@ -156,7 +156,7 @@ class PHPCD extends RpcServer
                     $reflection = $reflection->getMethod($name);
                 }
             } else {
-                $reflection = new ReflectionFunction($name);
+                $reflection = new \ReflectionFunction($name);
             }
 
             $path = $reflection_class ? $reflection_class->getFileName()
@@ -164,7 +164,7 @@ class PHPCD extends RpcServer
             $doc = $reflection->getDocComment();
 
             return [$path, $this->clearDoc($doc)];
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             $this->log((string) $e);
             return [null, null];
         }
@@ -184,7 +184,7 @@ class PHPCD extends RpcServer
      */
     public function nsuse($path)
     {
-        $file = new SplFileObject($path);
+        $file = new \SplFileObject($path);
         $s = [
             'namespace' => '',
             'imports' => [
@@ -255,15 +255,15 @@ class PHPCD extends RpcServer
     {
         try {
             if ($class_name) {
-                $reflection = new ReflectionClass($class_name);
+                $reflection = new \ReflectionClass($class_name);
                 $reflection = $reflection->getMethod($name);
             } else {
-                $reflection = new ReflectionFunction($name);
+                $reflection = new \ReflectionFunction($name);
             }
             $type = $reflection->getReturnType();
 
             return (string) $type;
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             $this->log((string) $e);
         }
     }
@@ -409,7 +409,7 @@ class PHPCD extends RpcServer
             return null;
         }
 
-        $reflection = new ReflectionFunction($name);
+        $reflection = new \ReflectionFunction($name);
         $params = array_map(function ($param) {
             return $param->getName();
         }, $reflection->getParameters());

@@ -26,7 +26,7 @@ class RpcServer
 
     public function __construct(
         $root,
-        MessagePackUnpacker $unpacker
+        \MessagePackUnpacker $unpacker
     ) {
         $this->setRoot($root);
         $log_path = getenv('HOME') . '/.phpcd.log';

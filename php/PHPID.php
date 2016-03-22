@@ -179,7 +179,7 @@ class PHPID extends RpcServer
 
     private function getClassInfo($name) {
         try {
-            $reflection = new ReflectionClass($name);
+            $reflection = new \ReflectionClass($name);
 
             $parent = $reflection->getParentClass();
             if ($parent) {
@@ -189,7 +189,7 @@ class PHPID extends RpcServer
             $interfaces = array_keys($reflection->getInterfaces());
 
             return [$parent, $interfaces];
-        } catch (ReflectionException $e) {
+        } catch (\ReflectionException $e) {
             return [null, []];
         }
     }
