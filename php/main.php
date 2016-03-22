@@ -4,6 +4,9 @@ error_reporting(0);
 $root   = $argv[1];
 $daemon = $argv[2];
 
+
+/** It would to avoid manual require each used class. **/
+// require __DIR__ . '/../vendor/autoload.php';
 require $root . '/vendor/autoload.php';
 require __DIR__ . '/RpcServer.php';
 
@@ -20,6 +23,7 @@ try {
             throw new \InvalidArgumentException('The second parameter should be PHPCD or PHPID');
     }
 
+    $daemon = '\\PHPCD\\'.$daemon;
     $unpacker = new \MessagePackUnpacker;
 
     // @TODO create logger instance,

@@ -1,5 +1,7 @@
 <?php
 
+namespace PHPCD;
+
 class PHPCD extends RpcServer
 {
     const MATCH_SUBSEQUENCE = 'match_subsequence';
@@ -327,7 +329,7 @@ class PHPCD extends RpcServer
 
     private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
-        $reflection = new \Reflection\ReflectionClass($class_name);
+        $reflection = new \PHPCD\Reflection\ReflectionClass($class_name);
         $items = [];
 
         if (false !== $is_static) {

@@ -1,5 +1,7 @@
 <?php
 
+namespace PHPCD;
+
 class RpcServer
 {
     const TYPE_REQUEST = 0;

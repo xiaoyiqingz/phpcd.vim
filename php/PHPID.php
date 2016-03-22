@@ -1,5 +1,7 @@
 <?php
 
+namespace PHPCD;
+
 class PHPID extends RpcServer
 {
     public function loop()
