@@ -11,5 +11,8 @@
     },
     "require": {
         "psr/log": "dev-master"
+    },
+    "config": {
+      "classmap-authoritative": true
     }
 }
