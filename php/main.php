@@ -4,11 +4,10 @@ error_reporting(0);
 $root   = $argv[1];
 $daemon = $argv[2];
 
-
-/** It would to avoid manual require each used class. **/
+/** load autoloader for PHPCD **/
 require __DIR__ . '/../vendor/autoload.php';
+/** load autoloader for the project **/
 require $root . '/vendor/autoload.php';
-// require __DIR__ . '/RpcServer.php';
 
 $log_path = getenv('HOME') . '/.phpcd.log';
 $logger = new PHPCD\Logger($log_path);
@@ -16,11 +15,7 @@ $logger = new PHPCD\Logger($log_path);
 try {
     switch ($daemon) {
         case 'PHPCD':
-            // require __DIR__ . '/PHPCD.php';
-            // require __DIR__ . '/Reflection/ReflectionClass.php';
-            break;
         case 'PHPID':
-            // require __DIR__ . '/PHPID.php';
             break;
         default:
             throw new \InvalidArgumentException('The second parameter should be PHPCD or PHPID');
