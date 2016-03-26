@@ -26,7 +26,7 @@ try {
 
     (new $daemon($root, $unpacker, $logger))->loop();
 } catch (\Throwable $e) {
-    $logger->emergency($e->getMessage(), $e->getTrace());
+    $logger->error($e->getMessage(), $e->getTrace());
 } catch (\Exception $e) {
-    $logger->emergency($e->getMessage(), $e->getTrace());
+    $logger->error($e->getMessage(), $e->getTrace());
 }
