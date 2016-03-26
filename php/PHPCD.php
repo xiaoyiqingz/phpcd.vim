@@ -2,6 +2,8 @@
 
 namespace PHPCD;
 
+use Psr\Log\LoggerInterface;
+
 class PHPCD extends RpcServer
 {
     const MATCH_SUBSEQUENCE = 'match_subsequence';
@@ -28,9 +30,10 @@ class PHPCD extends RpcServer
 
     public function __construct(
         $root,
-        \MessagePackUnpacker $unpacker
+        \MessagePackUnpacker $unpacker,
+        LoggerInterface $logger
     ) {
-        parent::__construct($root, $unpacker);
+        parent::__construct($root, $unpacker, $logger);
 
         /** Set default match type **/
         $this->setMatchType(self::MATCH_SUBSEQUENCE);
@@ -167,7 +170,7 @@ class PHPCD extends RpcServer
 
             return [$path, $this->clearDoc($doc)];
         } catch (\ReflectionException $e) {
-            $this->log((string) $e);
+            $this->logger->debug((string) $e);
             return [null, null];
         }
     }
@@ -266,7 +269,7 @@ class PHPCD extends RpcServer
 
             return (string) $type;
         } catch (\ReflectionException $e) {
-            $this->log((string) $e);
+            $this->logger->debug((string) $e);
         }
     }
 
