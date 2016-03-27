@@ -64,7 +64,7 @@ autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
 
 ## Usage
 
-First, run `composer update` to install all packages and generate the autoload file.
+First, in the project directory, run `composer install` to install all the dependent packages and generate the autoload file.
 
 The default PHP command used to run PHP parts of daemon is simply `php`. You may override it by assigning `g:phpcd_php_cli_executable` another value in your `vimrc`, for example:
 ```
