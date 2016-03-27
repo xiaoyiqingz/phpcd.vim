@@ -56,6 +56,8 @@ And then execute `:PlugInstall` in the command mode.
 
 ### Enable PHPCD
 
+Before the first use PHPCD, in the phpcd.vim directory run `composer install`. This is needed to install dependences and generate the autoload file.
+
 Let PHPCD complete php,
 
 ```
