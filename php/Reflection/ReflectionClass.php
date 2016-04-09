@@ -1,6 +1,6 @@
 <?php
 
-namespace Reflection;
+namespace PHPCD\Reflection;
 
 class ReflectionClass extends \ReflectionClass
 {

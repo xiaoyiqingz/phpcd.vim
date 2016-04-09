@@ -1,7 +1,14 @@
 <?php
 
+namespace PHPCD;
+
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareTrait;
+
 class RpcServer
 {
+    use LoggerAwareTrait;
+
     const TYPE_REQUEST = 0;
     const TYPE_RESPONSE = 1;
     const TYPE_NOTIFICATION = 2;
@@ -15,19 +22,21 @@ class RpcServer
 
     private $request_callback = [];
 
-    private $log_file;
-
     /**
      * Composer root dir(containing vendor)
      */
     protected $root;
 
-    public function __construct($root)
-    {
+    private $unpacker;
+
+    public function __construct(
+        $root,
+        \MessagePackUnpacker $unpacker,
+        LoggerInterface $logger
+    ) {
         $this->setRoot($root);
-        $log_path = getenv('HOME') . '/.phpcd.log';
-        $this->log_file = fopen($log_path, 'a');
-        $this->unpacker = new MessagePackUnpacker;
+        $this->unpacker = $unpacker;
+        $this->setLogger($logger);
 
         register_shutdown_function([$this, 'shutdown']);
     }
@@ -172,27 +181,29 @@ class RpcServer
         return $this->msg_id++;
     }
 
-    private function write($message)
+    private function write(array $message)
     {
         $this->rpcLog(self::DIRECTION_OUT, $message);
         fwrite(STDOUT, msgpack_pack($message));
     }
 
-    protected function log($log, $context = [])
+    private $rpc_directions = [
+        self::DIRECTION_IN  => 'NeoVim -> PHPCD',
+        self::DIRECTION_OUT => 'PHPCD  -> NeoVim'
+    ];
+
+    private function getDirectionString($direction)
     {
-        $log = $log . '#' . json_encode($context, JSON_PRETTY_PRINT) . PHP_EOL;
-        fwrite($this->log_file, $log);
+        if (!array_key_exists($direction, $this->rpc_directions)) {
+            throw new InvalidArgumentException('Invalid direction');
+        }
+
+        return sprintf("[RPC][%s]: ", $this->rpc_directions[$direction]);
     }
 
     private function rpcLog($direction, $message)
     {
-        if ($direction === self::DIRECTION_IN) {
-            $log = '[RPC][NeoVim -> PHPCD ]: ';
-        } else {
-            $log = '[RPC][PHPCD  -> NeoVim]: ';
-        }
-
-        $log = $log . json_encode($message) . PHP_EOL;
-        fwrite($this->log_file, $log);
+        $message = $this->getDirectionString($direction) . json_encode($message);
+        $this->logger->info($message);
     }
 }

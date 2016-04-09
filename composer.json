@@ -7,9 +7,12 @@
         }
     ],
     "autoload": {
-        "classmap": [
-            "php"
-        ]
+        "psr-4": {"PHPCD\\": "php/"}
     },
-    "require": {}
+    "require": {
+        "psr/log": "1.0.0"
+    },
+    "config": {
+      "classmap-authoritative": true
+    }
 }

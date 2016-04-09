@@ -39,17 +39,16 @@ silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-\>
 			\ :<C-u>call phpcd#JumpToDefinition('vsplit')<CR>
 
-let phpcd_path = expand('<sfile>:p:h:h') . '/php/phpcd_main.php'
+let phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
 if g:phpcd_channel_id != -1
 	call rpcstop(g:phpcd_channel_id)
 endif
-let g:phpcd_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root])
+let g:phpcd_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root, 'PHPCD'])
 
-let phpid_path = expand('<sfile>:p:h:h') . '/php/phpid_main.php'
 if g:phpid_channel_id != -1
 	call rpcstop(g:phpid_channel_id)
 endif
-let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpid_path, root])
+let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [phpcd_path, root, 'PHPID'])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
