@@ -332,41 +332,46 @@ class PHPCD extends RpcServer
 
     private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
-        $reflection = new \PHPCD\Reflection\ReflectionClass($class_name);
-        $items = [];
+        try {
+            $reflection = new \PHPCD\Reflection\ReflectionClass($class_name);
+            $items = [];
 
-        if (false !== $is_static) {
-            foreach ($reflection->getConstants() as $name => $value) {
-                if (!$pattern || $this->matchPattern($pattern, $name)) {
-                    $items[] = [
-                        'word' => $name,
-                        'abbr' => sprintf(" +@ %s %s", $name, $value),
-                        'kind' => 'd',
-                        'icase' => 1,
-                    ];
+            if (false !== $is_static) {
+                foreach ($reflection->getConstants() as $name => $value) {
+                    if (!$pattern || $this->matchPattern($pattern, $name)) {
+                        $items[] = [
+                            'word' => $name,
+                            'abbr' => sprintf(" +@ %s %s", $name, $value),
+                            'kind' => 'd',
+                            'icase' => 1,
+                        ];
+                    }
                 }
             }
-        }
 
-        $methods = $reflection->getAvailableMethods($is_static, $public_only);
+            $methods = $reflection->getAvailableMethods($is_static, $public_only);
 
-        foreach ($methods as $method) {
-            $info = $this->getMethodInfo($method, $pattern);
-            if ($info) {
-                $items[] = $info;
+            foreach ($methods as $method) {
+                $info = $this->getMethodInfo($method, $pattern);
+                if ($info) {
+                    $items[] = $info;
+                }
             }
-        }
 
-        $properties = $reflection->getAvailableProperties($is_static, $public_only);
+            $properties = $reflection->getAvailableProperties($is_static, $public_only);
 
-        foreach ($properties as $property) {
-            $info = $this->getPropertyInfo($property, $pattern);
-            if ($info) {
-                $items[] = $info;
+            foreach ($properties as $property) {
+                $info = $this->getPropertyInfo($property, $pattern);
+                if ($info) {
+                    $items[] = $info;
+                }
             }
-        }
 
-        return $items;
+            return $items;
+        } catch (\ReflectionException $e) {
+            $this->logger->debug($e->getMessage());
+            return [null, []];
+        }
     }
 
     private function functionOrConstantInfo($pattern)
