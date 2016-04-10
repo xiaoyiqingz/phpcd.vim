@@ -189,6 +189,10 @@ class PHPCD extends RpcServer
      */
     public function nsuse($path)
     {
+        $use_pattern =
+            '/^use\s+((?<type>(constant|function)) )?(?<left>[\\\\\w]+\\\\)?({)?(?<right>[\\\\,\w\s]+)(})?\s*;$/';
+        $alias_pattern = '/(?<suffix>[\\\\\w]+)(\s+as\s+(?<alias>\w+))?/';
+
         $file = new \SplFileObject($path);
         $s = [
             'namespace' => '',
@@ -196,6 +200,7 @@ class PHPCD extends RpcServer
             ],
             'class' => '',
         ];
+
         foreach ($file as $line) {
             if (preg_match('/^\s*\b(class|interface|trait)\s+(\S+)/i', $line, $matches)) {
                 $s['class'] = $matches[2];
@@ -208,18 +213,26 @@ class PHPCD extends RpcServer
             if (preg_match('/(<\?php)?\s*namespace\s+(.*);$/', $line, $matches)) {
                 $s['namespace'] = $matches[2];
             } elseif (strtolower(substr($line, 0, 3) == 'use')) {
-                $as_pos = strripos($line, ' as ');
-                if ($as_pos !== false) {
-                    $alias = self::trim(substr($line, $as_pos + 3, -1));
-                    $s['imports'][$alias] = self::trim(substr($line, 3, $as_pos - 3));
-                } else {
-                    $slash_pos = strripos($line, '\\');
-                    if ($slash_pos === false) {
-                        $alias = self::trim(substr($line, 4, -1));
-                    } else {
-                        $alias = self::trim(substr($line, $slash_pos + 1, -1));
+                if (preg_match($use_pattern, $line, $use_matches) && !empty($use_matches)) {
+                    $expansions = array_map([self, 'trim'], explode(',', $use_matches['right']));
+
+                    foreach ($expansions as $expansion) {
+                        if (preg_match($alias_pattern, $expansion, $expansion_matches) && !empty($expansion_matches)) {
+                            $suffix = $expansion_matches['suffix'];
+                            $alias = $expansion_matches['alias'];
+
+                            if (empty($alias)) {
+                                $suffix_parts = explode('\\', $suffix);
+                                $alias = array_pop($suffix_parts);
+                            }
+                        }
+
+                        /** empty type means import of some class **/
+                        if (empty($use_matches['type'])) {
+                            $s['imports'][$alias] = $use_matches['left'] . $suffix;
+                        }
+                        // @todo case when $use_matches['type'] is 'constant' or 'function'
                     }
-                    $s['imports'][$alias] = self::trim(substr($line, 4, -1));
                 }
             }
         }
