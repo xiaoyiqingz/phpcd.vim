@@ -159,10 +159,10 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let start = col('.') - 1
 	let end = start
 	if start < 0
-		let start = 0;
+		let start = 0
 	endif
 	if end < 0
-		let end = 0;
+		let end = 0
 	endif
 
 	while start >= 0 && line[start - 1] =~ '[\\a-zA-Z_0-9\x7f-\xff$]'
@@ -264,7 +264,7 @@ function! phpcd#SelectOne(items) " {{{
 	if index >= 1 && index <= len
 		return items[index - 1]
 	endif
-endfunction! " }}}
+endfunction " }}}
 
 function! s:getNextCharWithPos(filelines, current_pos) " {{{
 	let line_no   = a:current_pos[0]
