@@ -214,7 +214,7 @@ class PHPCD extends RpcServer
                 $s['namespace'] = $matches[2];
             } elseif (strtolower(substr($line, 0, 3) == 'use')) {
                 if (preg_match($use_pattern, $line, $use_matches) && !empty($use_matches)) {
-                    $expansions = array_map([self, 'trim'], explode(',', $use_matches['right']));
+                    $expansions = array_map('self::trim', explode(',', $use_matches['right']));
 
                     foreach ($expansions as $expansion) {
                         if (preg_match($alias_pattern, $expansion, $expansion_matches) && !empty($expansion_matches)) {
