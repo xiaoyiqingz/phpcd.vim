@@ -219,11 +219,12 @@ class PHPCD extends RpcServer
                     foreach ($expansions as $expansion) {
                         if (preg_match($alias_pattern, $expansion, $expansion_matches) && !empty($expansion_matches)) {
                             $suffix = $expansion_matches['suffix'];
-                            $alias = $expansion_matches['alias'];
 
-                            if (empty($alias)) {
+                            if (empty($expansion_matches['alias'])) {
                                 $suffix_parts = explode('\\', $suffix);
                                 $alias = array_pop($suffix_parts);
+                            } else {
+                                $alias = $expansion_matches['alias'];
                             }
                         }
 
