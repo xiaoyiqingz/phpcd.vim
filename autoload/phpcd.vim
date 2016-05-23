@@ -476,7 +476,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 	let classname_candidate = a:classname_candidate " {{{
 	let class_candidate_namespace = a:class_candidate_namespace
 	let methodstack = a:methodstack
-	let unknown_result = ['', '']
+	let unknown_result = ''
 	let prev_method_is_array = (methodstack[0] =~ '\v^[^([]+\[' ? 1 : 0)
 	let classname_candidate_is_array = (classname_candidate =~ '\[\]$' ? 1 : 0) " }}}
 
