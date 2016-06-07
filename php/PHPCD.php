@@ -127,13 +127,24 @@ class PHPCD extends RpcServer
 
     private function getConstPath($const_name, \ReflectionClass $reflection)
     {
-        $path = $reflection->getFileName();
+        $origin = $path = $reflection->getFileName();
+        $origin_reflection = $reflection;
 
         while ($reflection = $reflection->getParentClass()) {
             if ($reflection->hasConstant($const_name)) {
                 $path = $reflection->getFileName();
             } else {
                 break;
+            }
+        }
+
+        if ($origin === $path) {
+            $interfaces = $origin_reflection->getInterfaces();
+            foreach ($interfaces as $interface) {
+                if ($interface->hasConstant($const_name)) {
+                    $path = $interface->getFileName();
+                    break;
+                }
             }
         }
 
