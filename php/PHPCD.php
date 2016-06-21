@@ -89,7 +89,7 @@ class PHPCD implements RpcHandler
      * @var string $static_mode see translateStaticMode method
      * @var bool $public_only
      */
-    public function info($class_name, $pattern, $static_mode = 'both', $public_only)
+    public function info($class_name, $pattern, $static_mode = 'both', $public_only = true)
     {
         if ($class_name) {
             $static_mode = $this->translateStaticMode($static_mode);
