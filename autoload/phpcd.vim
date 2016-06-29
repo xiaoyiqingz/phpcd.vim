@@ -177,7 +177,8 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let word = substitute(word, '\v\c[^\\a-zA-Z_0-9$]*$', '', '')
 
 	let current_instruction = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
-	let context = substitute(current_instruction, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
+	let context = substitute(current_instruction, 'clone ', '', '')
+	let context = substitute(context, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
 
 	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace()
