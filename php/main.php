@@ -13,12 +13,13 @@ require __DIR__ . '/../vendor/autoload.php';
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Lvht\MsgpackRpc\ForkServer;
-use Lvht\MsgpackRpc\DefaultMsgpacker;
+use Lvht\MsgpackRpc\MsgpackMessenger;
 use Lvht\MsgpackRpc\StdIo;
 
 $log_path = getenv('HOME') . '/.phpcd.log';
 $logger = new Logger('PHPCD');
 $logger->pushHandler(new StreamHandler($log_path, Logger::DEBUG));
+$messenger = new MsgpackMessenger(new StdIo());
 
 try {
     /** load autoloader for the project **/
@@ -35,7 +36,7 @@ try {
             throw new \InvalidArgumentException('The second parameter should be PHPCD or PHPID');
     }
 
-    $server = new ForkServer(new DefaultMsgpacker, new StdIo, $handler);
+    $server = new ForkServer($messenger, $handler);
     if ($daemon == 'PHPID') {
         $handler->index();
     }
