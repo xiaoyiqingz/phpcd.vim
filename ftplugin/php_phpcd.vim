@@ -46,12 +46,12 @@ else
 end
 
 let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
-if g:phpcd_channel_id != -1
+if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPCD', messenger])
 
-if g:phpid_channel_id != -1
+if exists('g:phpid_channel_id')
 	call rpc#stop(g:phpid_channel_id)
 endif
 let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPID', messenger])

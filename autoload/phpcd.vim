@@ -1,6 +1,6 @@
 function! phpcd#CompletePHP(findstart, base) " {{{
 	" we need to wait phpcd {{{
-	if g:phpcd_channel_id < 0
+	if !exists('g:phpcd_channel_id')
 		return
 	endif " }}}
 
@@ -25,12 +25,12 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 
 	" If exists b:php_menu it means completion was already constructed {{{
 	" we don't need to do anything more
-	if exists("b:php_menu")
+	if exists('b:php_menu')
 		return b:php_menu
 	endif " }}}
 
 	" a:base is very short - we need context {{{
-	if exists("b:compl_context")
+	if exists('b:compl_context')
 		let context = b:compl_context
 		unlet! b:compl_context
 		" chop of the "base" from the end of the current instruction
@@ -108,7 +108,7 @@ function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
-	if g:phpcd_channel_id < 0
+	if !exists('g:phpcd_channel_id')
 		return
 	endif
 
@@ -218,7 +218,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		if a:symbol_context =~ '^abstract'
 			let is_interface = 0
 		endif
-		if interface != '' && g:phpid_channel_id >= 0
+		if interface != '' && exists('g:phpid_channel_id')
 			let impls = rpc#request(g:phpid_channel_id, 'ls', interface, is_interface)
 			let impl = phpcd#SelectOne(impls)
 
@@ -920,7 +920,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 endfunction " }}}
 
 function! phpcd#UpdateIndex() " {{{
-	if g:phpid_channel_id < 0
+	if !exists('g:phpid_channel_id')
 		return
 	endif
 
@@ -931,7 +931,7 @@ function! phpcd#UpdateIndex() " {{{
 endfunction " }}}
 
 function! phpcd#Reindex() "{{{
-	if g:phpid_channel_id < 0
+	if !exists('g:phpid_channel_id')
 		return
 	endif
 
