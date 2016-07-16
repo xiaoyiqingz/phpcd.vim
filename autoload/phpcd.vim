@@ -74,7 +74,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 				endif
 			endif
 
-			return rpcrequest(g:phpcd_channel_id, 'info', classname, a:base, is_static, public_only)
+			return rpc#request(g:phpcd_channel_id, 'info', classname, a:base, is_static, public_only)
 		elseif context =~? 'implements'
 			" TODO complete class Foo implements
 		elseif context =~? 'extends\s\+.\+$' && a:base == ''
@@ -98,13 +98,13 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 endfunction " }}}
 
 function! phpcd#GetPsrNamespace() " {{{
-	return rpcrequest(g:phpcd_channel_id, 'psr4ns', expand('%:p'))
+	return rpc#request(g:phpcd_channel_id, 'psr4ns', expand('%:p'))
 endfunction " }}}
 
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
-	return rpcrequest(g:phpcd_channel_id, 'info', '', pattern)
+	return rpc#request(g:phpcd_channel_id, 'info', '', pattern)
 endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
@@ -201,12 +201,12 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 
 		" Get location of class definition, we have to iterate through all
 		if classname != ''
-			let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', classname, a:symbol)
+			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', classname, a:symbol)
 			return [path, line, 0]
 		endif " }}}
 	elseif a:symbol_context == 'new' || a:symbol_context =~ '\vimplements|extends'" {{{
 		let full_classname = a:symbol_namespace . '\' . a:symbol
-		let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, '')
+		let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, '')
 		return [path, line, 0] " }}}
 	elseif a:symbol_context =~ 'function' " {{{
 		" try to find interface method's implementation
@@ -219,11 +219,11 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			let is_interface = 0
 		endif
 		if interface != '' && g:phpid_channel_id >= 0
-			let impls = rpcrequest(g:phpid_channel_id, 'ls', interface, is_interface)
+			let impls = rpc#request(g:phpid_channel_id, 'ls', interface, is_interface)
 			let impl = phpcd#SelectOne(impls)
 
 			if impl != ''
-				let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', impl, a:symbol)
+				let [path, line] = rpc#request(g:phpcd_channel_id, 'location', impl, a:symbol)
 				return [path, line, 0]
 			endif
 		endif " }}}
@@ -235,17 +235,17 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		return [path, '$', 0] "}}}
 	elseif a:symbol_context =~ '.\+@' " laravel route {{{
 		let full_classname = strpart(a:symbol_context, 1, strlen(a:symbol_context)-2)
-		let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname, a:symbol)
+		let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, a:symbol)
 		return [path, line, 0] " }}}
 	else " {{{
 		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
 			let full_classname = namespace . '\' . classname
-			let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', full_classname)
+			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname)
 		else
-			let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
+			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
 			if path == ''
-				let [path, line] = rpcrequest(g:phpcd_channel_id, 'location', '', a:symbol)
+				let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol)
 			endif
 		end
 
@@ -501,7 +501,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 	let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
 	let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, imports)
 	let full_classname = class_candidate_namespace . '\' . classname_candidate
-	let return_types = rpcrequest(g:phpcd_channel_id, 'functype', full_classname, method)
+	let return_types = rpc#request(g:phpcd_channel_id, 'functype', full_classname, method)
 	if len(return_types) > 0
 		let return_type = phpcd#SelectOne(return_types)
 		return phpcd#GetCallChainReturnType(return_type, '', imports, methodstack)
@@ -669,7 +669,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			return class_candidate_namespace . '\' . classname_candidate
 		endif " }}}
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
-		let return_types = rpcrequest(g:phpcd_channel_id, 'functype', '', function_name)
+		let return_types = rpc#request(g:phpcd_channel_id, 'functype', '', function_name)
 		if len(return_types) > 0
 			let return_type = phpcd#SelectOne(return_types)
 			return phpcd#GetCallChainReturnType(return_type, '', class_candidate_imports, methodstack)
@@ -925,9 +925,9 @@ function! phpcd#UpdateIndex() " {{{
 	endif
 
 	let g:phpcd_need_update = 0
-	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+	let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 	let classname = nsuse.namespace . '\' . nsuse.class
-	return rpcnotify(g:phpid_channel_id, 'update', classname)
+	return rpc#notify(g:phpid_channel_id, 'update', classname)
 endfunction " }}}
 
 function! phpcd#Reindex() "{{{
@@ -935,7 +935,7 @@ function! phpcd#Reindex() "{{{
 		return
 	endif
 
-	call rpcnotify(g:phpid_channel_id, 'index', 1)
+	call rpc#notify(g:phpid_channel_id, 'index', 1)
 endfunction " }}}
 
 function! phpcd#GetDocBlock(sccontent, search) " {{{
@@ -1077,7 +1077,7 @@ function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
 endfunction " }}}
 
 function! phpcd#GetCurrentNameSpace() " {{{
-	let nsuse = rpcrequest(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+	let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 
 	let imports = {}
 	if len(nsuse.imports) > 0
