@@ -29,7 +29,10 @@ if ($messenger == 'json') {
 
 try {
     /** load autoloader for the project **/
-    require $root . '/vendor/autoload.php';
+    $composer_autoload_file = $root . '/vendor/autoload.php';
+    if (is_readable($composer_autoload_file)) {
+        require $composer_autoload_file;
+    }
 
     switch ($daemon) {
         case 'PHPCD':

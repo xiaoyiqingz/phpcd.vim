@@ -26,12 +26,6 @@ endfunction " }}}
 
 let s:root = GetComposerRoot()
 
-if s:root == '/'
-	let &cpo = s:save_cpo
-	unlet s:save_cpo
-	finish
-endif
-
 silent! nnoremap <silent> <unique> <buffer> <C-]>
 			\ :<C-u>call phpcd#JumpToDefinition('normal')<CR>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
@@ -51,9 +45,16 @@ if exists('g:phpcd_channel_id')
 endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPCD', messenger])
 
+if s:root == '/'
+	let &cpo = s:save_cpo
+	unlet s:save_cpo
+	finish
+endif
+
 if exists('g:phpid_channel_id')
 	call rpc#stop(g:phpid_channel_id)
 endif
+
 let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPID', messenger])
 
 let &cpo = s:save_cpo
