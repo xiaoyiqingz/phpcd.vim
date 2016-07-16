@@ -6,6 +6,7 @@ set_error_handler(function ($severity, $message, $file, $line) {
 
 $root   = $argv[1];
 $daemon = $argv[2];
+$messenger = $argv[3];
 
 /** load autoloader for PHPCD **/
 require __DIR__ . '/../vendor/autoload.php';
@@ -14,12 +15,17 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Lvht\MsgpackRpc\ForkServer;
 use Lvht\MsgpackRpc\MsgpackMessenger;
+use Lvht\MsgpackRpc\JsonMessenger;
 use Lvht\MsgpackRpc\StdIo;
 
 $log_path = getenv('HOME') . '/.phpcd.log';
 $logger = new Logger('PHPCD');
 $logger->pushHandler(new StreamHandler($log_path, Logger::DEBUG));
-$messenger = new MsgpackMessenger(new StdIo());
+if ($messenger == 'json') {
+    $messenger = new JsonMessenger(new StdIo());
+} else {
+    $messenger = new MsgpackMessenger(new StdIo());
+}
 
 try {
     /** load autoloader for the project **/

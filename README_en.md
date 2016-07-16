@@ -11,7 +11,7 @@ PHPCD is based on [phpcomplete.vim](https://github.com/shawncplus/phpcomplete.vi
 
 While phpcomplete.vim using the tag file to fetch the context info, PHPCD use the PHP's Reflection mechanism to fetch the context info, and this is why PHPCD is faster. All the phpcomplete VimL code related the tag file has been droped and reimplemented.
 
-PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. The communication between the VimL part and the PHP part is rely on the NeoVim's MsgPack-RPC mechanism. This is why the NeoVim is needed.
+PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. ~~The communication between the VimL part and the PHP part is rely on the NeoVim's MsgPack-RPC mechanism. This is why the NeoVim is needed.~~ Both NeoVim and Vim 7.4+ has been supported now. Thanks to NoeVims's MsgPack-RPC and Vim's Channel.
 
 ##  Feature
  * Fast, Lightweight, Strong
@@ -33,12 +33,10 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
 
 ### System requirement
 
- 1. PHP 5.3+
- 2. ~~[socket](http://php.net/manual/en/book.sockets.php) Extension~~
- 3. [PCNTL](http://php.net/manual/en/book.pcntl.php) Extension
- 4. [Msgpack 0.5.7+](https://github.com/msgpack/msgpack-php) Extension
- 5. [NeoVim](http://neovim.io/)
- 6. [Composer](https://getcomposer.org/) Project
+ 1. [PHP 5.3+](http://php.net/)
+ 2. [PCNTL](http://php.net/manual/en/book.pcntl.php) Extension
+ 3. [Msgpack 0.5.7+(for NeoVim)](https://github.com/msgpack/msgpack-php) Extension or [JSON(for Vim 7.4+)](http://php.net/manual/en/intro.json.php) Extension
+ 4. [Composer](https://getcomposer.org/) Project
 
 
 ### Install PHPCD
@@ -49,7 +47,6 @@ With Vim-Plug installed, put the following lines in your vimrc,
 
 ```
 Plug 'phpvim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
-Plug 'vim-scripts/progressbar-widget' " used for showing the index progress
 ```
 
 And then execute `:PlugInstall` in the command mode.
@@ -72,9 +69,6 @@ The default PHP command used to run PHP parts of daemon is simply `php`. You may
 ```
 let g:phpcd_php_cli_executable = 'php7.0'
 ```
-
-Then, use NeoVim to open a php file. You will see a progress bar several seconds later.
-When the bar finish, you could enjoy you PHP coding.
 
 Use <kbd>Ctrl</kbd>+<kbd>x</kbd><kbd>Ctrl</kbd>+<kbd>o</kbd> to complete and use <kbd>ctrl</kbd>+<kbd>]</kbd> to go to the defination.
 

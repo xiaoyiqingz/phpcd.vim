@@ -39,16 +39,22 @@ silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-\>
 			\ :<C-u>call phpcd#JumpToDefinition('vsplit')<CR>
 
-let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
-if g:phpcd_channel_id != -1
-	call rpcstop(g:phpcd_channel_id)
-endif
-let g:phpcd_channel_id = rpcstart(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPCD'])
+if has('nvim')
+	let messenger = 'msgpack'
+else
+	let messenger = 'json'
+end
 
-if g:phpid_channel_id != -1
-	call rpcstop(g:phpid_channel_id)
+let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
+if exists('g:phpcd_channel_id')
+	call rpc#stop(g:phpcd_channel_id)
 endif
-let g:phpid_channel_id = rpcstart(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPID'])
+let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPCD', messenger])
+
+if exists('g:phpid_channel_id')
+	call rpc#stop(g:phpid_channel_id)
+endif
+let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPID', messenger])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
