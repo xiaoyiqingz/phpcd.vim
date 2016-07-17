@@ -5,16 +5,16 @@
 
 ## Introduction
 
-PHPCD (PHP Completion Daemon) is another vim omni complete engine for PHP.
+PHPCD (PHP Completion Daemon) is another Vim omni complete engine for PHP.
 
-PHPCD is based on [phpcomplete.vim](https://github.com/shawncplus/phpcomplete.vim) but is faster;
+PHPCD is based on [phpcomplete.vim](https://github.com/shawncplus/phpcomplete.vim) but is faster.
 
-While phpcomplete.vim using the tag file to fetch the context info, PHPCD use the PHP's Reflection mechanism to fetch the context info, and this is why PHPCD is faster. All the phpcomplete VimL code related the tag file has been droped and reimplemented.
+While phpcomplete.vim uses the tags file to fetch the context info, PHPCD uses PHP's Reflection mechanism to fetch the context info, and this is why PHPCD is faster. All the phpcomplete VimL code related the tags file has been droped and reimplemented.
 
-PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. ~~The communication between the VimL part and the PHP part is rely on the NeoVim's MsgPack-RPC mechanism. This is why the NeoVim is needed.~~ Both NeoVim and Vim 7.4+ has been supported now. Thanks to NoeVims's MsgPack-RPC and Vim's Channel.
+PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. ~~The communication between the VimL part and the PHP part relies on NeoVim's MsgPack-RPC mechanism. This is why NeoVim is needed.~~ Both NeoVim and Vim 7.4+ are supported now. Thanks to NoeVims's MsgPack-RPC and Vim's Channel.
 
 ##  Feature
- * Fast, Lightweight, Strong
+ * Fast, Lightweight, Powerful
  * Correct restriction of static or standard methods based on context (show only static methods with `::` and only standard with `->`)
  * Real support for `self::`, `static::`, `parent::` and `$this->` with the aforementioned context restriction
  * Better class detection
@@ -41,9 +41,9 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
 
 ### Install PHPCD
 
-We recommend you use [Vim-Plug](https://github.com/junegunn/vim-plug/blob/master/README.md) to mange your vim plugins.
+We recommend you use [Vim-Plug](https://github.com/junegunn/vim-plug/blob/master/README.md) to manage your vim plugins.
 
-With Vim-Plug installed, put the following lines in your vimrc,
+With Vim-Plug installed, put the following lines in your vimrc:
 
 ```
 Plug 'phpvim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
@@ -53,9 +53,9 @@ And then execute `:PlugInstall` in the command mode.
 
 ### Enable PHPCD
 
-Before the first use PHPCD, in the phpcd.vim directory run `composer install`. This is needed to install dependences and generate the autoload file.
+Before the first use PHPCD, in the phpcd.vim directory run `composer install`. This is needed to install dependencies and generate the autoload file.
 
-Let PHPCD complete php,
+Let PHPCD complete php:
 
 ```
 autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
