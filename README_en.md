@@ -43,7 +43,7 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
 
 We recommend you use [Vim-Plug](https://github.com/junegunn/vim-plug/blob/master/README.md) to manage your vim plugins.
 
-With Vim-Plug installed, put the following lines in your vimrc,
+With Vim-Plug installed, put the following lines in your vimrc:
 
 ```
 Plug 'phpvim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
