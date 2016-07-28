@@ -46,9 +46,6 @@ try {
     }
 
     $server = new ForkServer($messenger, $handler);
-    if ($daemon == 'PHPID') {
-        $handler->index();
-    }
 
     $server->loop();
 } catch (\Throwable $e) {
