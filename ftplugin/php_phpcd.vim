@@ -33,6 +33,8 @@ silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-\>
 			\ :<C-u>call phpcd#JumpToDefinition('vsplit')<CR>
 
+command! -nargs=0 PHPID call phpcd#Index()
+
 if has('nvim')
 	let messenger = 'msgpack'
 else
@@ -43,7 +45,8 @@ let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
 if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
-let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPCD', messenger])
+let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
+			\ [s:phpcd_path, s:root, 'PHPCD', messenger])
 
 if s:root == '/'
 	let &cpo = s:save_cpo
@@ -55,7 +58,8 @@ if exists('g:phpid_channel_id')
 	call rpc#stop(g:phpid_channel_id)
 endif
 
-let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable, [s:phpcd_path, s:root, 'PHPID', messenger])
+let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable,
+			\ [s:phpcd_path, s:root, 'PHPID', messenger])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
