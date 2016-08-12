@@ -244,7 +244,11 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 	else " {{{
 		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
-			let full_classname = namespace . '\' . classname
+			if namespace == '\'
+				let full_classname = classname
+			else
+				let full_classname = namespace . '\' . classname
+			endif
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname)
 		else
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
@@ -498,7 +502,13 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 
 	if (len(methodstack) == 1) " {{{
 		let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, imports)
-		return class_candidate_namespace . '\' . classname_candidate
+		if (class_candidate_namespace == '\')
+			let return_type = '\' . classname_candidate
+		else
+			let return_type = class_candidate_namespace . '\' . classname_candidate
+		endif
+
+		return return_type
 	endif " }}}
 
 	call remove(methodstack, 0)
