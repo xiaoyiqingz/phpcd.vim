@@ -1093,14 +1093,7 @@ endfunction " }}}
 function! phpcd#GetCurrentNameSpace() " {{{
 	let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 
-	let imports = {}
-	if len(nsuse.imports) > 0
-		for [alias, fqdn] in items(nsuse.imports)
-			let imports[alias] = {'name': fqdn, 'kind': ''}
-		endfor
-	endif
-
-	return [nsuse.namespace, imports]
+	return [nsuse.namespace, nsuse.imports]
 endfunction " }}}
 
 function! phpcd#GetCurrentFunctionBoundaries() " {{{
@@ -1148,7 +1141,7 @@ function! phpcd#ExpandClassName(classname, current_namespace, imports) " {{{
 
 	let parts = split(a:classname, '\\\+')
 	if has_key(a:imports, parts[0])
-		let parts[0] = a:imports[parts[0]].name
+		let parts[0] = a:imports[parts[0]]
 	else
 		call insert(parts, a:current_namespace, 0)
 	endif
