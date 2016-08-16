@@ -260,6 +260,8 @@ class PHPCD implements RpcHandler
             }
         }
 
+        $s['imports'] = (object) $s['imports'];
+
         return $s;
     }
 
