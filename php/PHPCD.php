@@ -260,7 +260,9 @@ class PHPCD implements RpcHandler
             }
         }
 
-        $s['imports'] = (object) $s['imports'];
+        if (!$s['imports']) {
+            $s['imports'] = new \stdclass;
+        }
 
         return $s;
     }
