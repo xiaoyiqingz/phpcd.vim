@@ -532,8 +532,8 @@ class PHPCD implements RpcHandler
         switch ($this->matchType) {
             case self::MATCH_SUBSEQUENCE:
                 // @TODO Case sensitivity of matching should be probably configurable
-                // @TODO Quote characters that may be treat not literally
-                $regex = '/'.implode('.*', str_split($pattern)).'/i';
+                $modifiers = 'i';
+                $regex = sprintf('/%s/%s', implode('.*', array_map('preg_quote', str_split($pattern))), $modifiers);
 
                 return (bool)preg_match($regex, $fullString);
 
