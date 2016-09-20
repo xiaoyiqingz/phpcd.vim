@@ -219,6 +219,14 @@ class PHPCD implements RpcHandler
         $s = [
             'namespace' => '',
             'imports' => [
+                '@' => '',
+                // empty array will be enoded to "[]" by json
+                // so when there is no import we need convert
+                // the empty array into stdobj
+                // which will be encoded to "{}" by json
+                // however the msgpack used by neovim does not allowed dictionary
+                // with empty key. so we have no choice but fill import some
+                // value to ensure none empty.
             ],
             'class' => '',
         ];
@@ -258,10 +266,6 @@ class PHPCD implements RpcHandler
                     }
                 }
             }
-        }
-
-        if (!$s['imports']) {
-            $s['imports'] = new \stdclass;
         }
 
         return $s;
