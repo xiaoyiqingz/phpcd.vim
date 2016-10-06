@@ -181,7 +181,7 @@ class PHPID implements RpcHandler
     {
         $index_directory = dirname($index_file);
 
-        if (is_dir($index_directory)) {
+        if (!is_dir($index_directory)) {
             mkdir($index_directory, 0755, true);
         }
 
