@@ -51,16 +51,6 @@ Plug 'phpvim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
 
 And then execute `:PlugInstall` in the command mode.
 
-### Enable PHPCD
-
-Before the first use PHPCD, in the phpcd.vim directory run `composer install`. This is needed to install dependencies and generate the autoload file.
-
-Let PHPCD complete php:
-
-```
-autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
-```
-
 ## Usage
 
 First, in the project directory, run `composer install` to install all the dependent packages and generate the autoload file.
