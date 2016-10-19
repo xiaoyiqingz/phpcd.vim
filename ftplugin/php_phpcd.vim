@@ -32,6 +32,8 @@ silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
 			\ :<C-u>call phpcd#JumpToDefinition('split')<CR>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-\>
 			\ :<C-u>call phpcd#JumpToDefinition('vsplit')<CR>
+silent! nnoremap <silent> <unique> <buffer> <C-t>
+			\ :<C-u>call phpcd#JumpBack()<CR>
 
 command! -nargs=0 PHPID call phpcd#Index()
 
