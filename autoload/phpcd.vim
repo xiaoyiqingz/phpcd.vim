@@ -528,10 +528,17 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 	endif " }}}
 
 	call remove(methodstack, 0)
-	let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
 	let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, class_candidate_namespace, imports)
 	let full_classname = class_candidate_namespace . '\' . classname_candidate
-	let return_types = rpc#request(g:phpcd_channel_id, 'functype', full_classname, method)
+
+	if methodstack[0] =~ '('
+		let method = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
+		let return_types = rpc#request(g:phpcd_channel_id, 'functype', full_classname, method)
+	else
+		let prop = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
+		let return_types = rpc#request(g:phpcd_channel_id, 'proptype', full_classname, prop)
+	endif
+
 	if len(return_types) > 0
 		let return_type = phpcd#SelectOne(return_types)
 		return phpcd#GetCallChainReturnType(return_type, '', imports, methodstack)
