@@ -7,6 +7,7 @@ set_error_handler(function ($severity, $message, $file, $line) {
 $root   = $argv[1];
 $daemon = $argv[2];
 $messenger = $argv[3];
+$autoload_file = $argv[4];
 
 /** load autoloader for PHPCD **/
 require __DIR__ . '/../vendor/autoload.php';
@@ -29,9 +30,8 @@ if ($messenger == 'json') {
 
 try {
     /** load autoloader for the project **/
-    $composer_autoload_file = $root . '/vendor/autoload.php';
-    if (is_readable($composer_autoload_file)) {
-        require $composer_autoload_file;
+    if (is_readable($autoload_file)) {
+        require $autoload_file;
     }
 
     switch ($daemon) {

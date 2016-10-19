@@ -42,11 +42,12 @@ else
 end
 
 let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
+let s:autoload_path = s:root.'/'.g:phpcd_autoload_path
 if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, s:root, 'PHPCD', messenger])
+			\ [s:phpcd_path, s:root, 'PHPCD', messenger, s:autoload_path])
 
 if s:root == '/'
 	let &cpo = s:save_cpo
@@ -59,7 +60,7 @@ if exists('g:phpid_channel_id')
 endif
 
 let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, s:root, 'PHPID', messenger])
+			\ [s:phpcd_path, s:root, 'PHPID', messenger, s:autoload_path])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

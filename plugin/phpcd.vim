@@ -3,6 +3,10 @@ set cpo&vim
 
 let g:phpcd_need_update = 0
 
+if !exists('g:phpcd_autoload_path')
+	let g:phpcd_autoload_path = 'vendor/autoload.php'
+endif
+
 autocmd BufLeave,VimLeave *.php if g:phpcd_need_update > 0 | call phpcd#UpdateIndex() | endif
 autocmd BufWritePost *.php let g:phpcd_need_update = 1
 autocmd FileType php setlocal omnifunc=phpcd#CompletePHP
