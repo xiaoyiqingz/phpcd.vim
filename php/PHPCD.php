@@ -609,8 +609,19 @@ class PHPCD implements RpcHandler
         $composer_path = $this->root . '/composer.json';
         $composer = json_decode(file_get_contents($composer_path), true);
 
-        $list = (array) @$composer['autoload']['psr-4'];
-        foreach ((array) @$composer['autoload-dev']['psr-4'] as $namespace => $paths) {
+        if (isset($composer['autoload']['psr-4'])) {
+            $list = (array) $composer['autoload']['psr-4'];
+        } else {
+            $list = [];
+        }
+
+        if (isset($composer['autoload-dev']['psr-4'])) {
+            $dev_list = (array) $composer['autoload-dev']['psr-4'];
+        } else {
+            $dev_list = [];
+        }
+
+        foreach ($dev_list as $namespace => $paths) {
             if (isset($list[$namespace])) {
                 $list[$namespace] = array_merge((array)$list[$namespace], (array) $paths);
             } else {
