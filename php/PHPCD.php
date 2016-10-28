@@ -172,10 +172,9 @@ class PHPCD implements RpcHandler
         try {
             $reflection_class = null;
             if ($class_name) {
-                $this->logger->debug('hehe2');
                 $reflection = new \ReflectionClass($class_name);
+                $reflection_class = $reflection;
                 if (!$is_method) {
-                    $reflection_class = $reflection;
                     // ReflectionProperty does not have the getFileName method
                     // use ReflectionClass instead
                     $reflection = $reflection->getProperty($name);
@@ -194,9 +193,12 @@ class PHPCD implements RpcHandler
                 $reflection = new \ReflectionFunction($name);
             }
 
-            $path = $reflection_class ? $reflection_class->getFileName()
-                : $reflection->getFileName();
             $doc = $reflection->getDocComment();
+            if (preg_match('/@return\s+(static|self|\$this)/i', $doc) && $reflection_class) {
+                $path = $reflection_class->getFileName();
+            } else {
+                $path = $reflection->getFileName();
+            }
 
             return [$path, $this->clearDoc($doc)];
         } catch (\ReflectionException $e) {
