@@ -202,7 +202,7 @@ class PHPCD implements RpcHandler
 
             return [$path, $this->clearDoc($doc)];
         } catch (\ReflectionException $e) {
-            $this->logger->debug((string) $e);
+            $this->logger->debug($e->getMessage());
             return [null, null];
         }
     }
@@ -319,7 +319,28 @@ class PHPCD implements RpcHandler
     public function proptype($class_name, $name)
     {
         list($path, $doc) = $this->doc($class_name, $name, false);
-        return $this->typeByDoc($path, $doc);
+        $types = $this->typeByDoc($path, $doc);
+
+        if (!$types) {
+            $types = $this->typeByPropertyRead($class_name, $name);
+        }
+
+        return $types;
+    }
+
+    private function typeByPropertyRead($class_name, $name)
+    {
+        $reflection = new \ReflectionClass($class_name);
+        $doc = $reflection->getDocComment();
+        $path = $reflection->getFileName();
+        $has_doc = preg_match('/@property-read\s+(\S+)\s+\$?'.$name.'/mi', $doc, $matches);
+        if ($has_doc) {
+            $types = [$matches[1]];
+            $t = $this->fixRelativeType($path, $types);
+            return $t;
+        }
+
+        return [];
     }
 
     private function typeByReturnType($class_name, $name)
@@ -345,16 +366,25 @@ class PHPCD implements RpcHandler
 
     private function typeByDoc($path, $doc) {
         $has_doc = preg_match('/@(return|var)\s+(\S+)/m', $doc, $matches);
-        if (!$has_doc) {
-            return [];
+        if ($has_doc) {
+            return $this->fixRelativeType($path, explode('|', $matches[2]));
         }
 
-        $nsuse = $this->nsuse($path);
+        return [];
+    }
+
+    private function fixRelativeType($path, $names)
+    {
+        $nsuse = null;
 
         $types = [];
-        foreach (explode('|', $matches[2]) as $type) {
+        foreach ($names as $type) {
             if (isset($this->primitive_types[$type])) {
                 continue;
+            }
+
+            if (!$nsuse && $type[0] != '\\') {
+                $nsuse = $this->nsuse($path);
             }
 
             if (in_array(strtolower($type) , ['static', '$this', 'self'])) {
@@ -436,11 +466,37 @@ class PHPCD implements RpcHandler
                 }
             }
 
+            $pseudo_items = $this->getPseudoProperties($reflection);
+
+            $items = array_merge($items, $pseudo_items);
+
             return $items;
         } catch (\ReflectionException $e) {
             $this->logger->debug($e->getMessage());
             return [null, []];
         }
+    }
+
+    public function getPseudoProperties(\ReflectionClass $reflection)
+    {
+        $doc = $reflection->getDocComment();
+        $has_doc = preg_match_all('/@property-read\s+(\S+)\s+\$?(\S+)/m', $doc, $matches);
+        if (!$has_doc) {
+            return [];
+        }
+
+        $items = [];
+        foreach ($matches[2] as $idx => $name) {
+            $items[] = [
+                'word' => $name,
+                'abbr' => sprintf('%3s %s', '+', $name),
+                'info' => $matches[1][$idx],
+                'kind' => 'p',
+                'icase' => 1,
+            ];
+        }
+
+        return $items;
     }
 
     private function functionOrConstantInfo($pattern)
