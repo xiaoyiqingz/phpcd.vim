@@ -333,9 +333,9 @@ class PHPCD implements RpcHandler
         $reflection = new \ReflectionClass($class_name);
         $doc = $reflection->getDocComment();
         $path = $reflection->getFileName();
-        $has_doc = preg_match('/@property-read\s+(\S+)\s+\$?'.$name.'/mi', $doc, $matches);
+        $has_doc = preg_match('/@property(-read|-write)?\s+(\S+)\s+\$?'.$name.'/mi', $doc, $matches);
         if ($has_doc) {
-            $types = [$matches[1]];
+            $types = [$matches[2]];
             $t = $this->fixRelativeType($path, $types);
             return $t;
         }
@@ -480,13 +480,13 @@ class PHPCD implements RpcHandler
     public function getPseudoProperties(\ReflectionClass $reflection)
     {
         $doc = $reflection->getDocComment();
-        $has_doc = preg_match_all('/@property-read\s+(\S+)\s+\$?(\S+)/m', $doc, $matches);
+        $has_doc = preg_match_all('/@property(-read|-write)?\s+(\S+)\s+\$?([a-zA-Z0-9_$]+)/m', $doc, $matches);
         if (!$has_doc) {
             return [];
         }
 
         $items = [];
-        foreach ($matches[2] as $idx => $name) {
+        foreach ($matches[3] as $idx => $name) {
             $items[] = [
                 'word' => $name,
                 'abbr' => sprintf('%3s %s', '+', $name),
