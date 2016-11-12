@@ -118,7 +118,7 @@ function! phpcd#JumpToDefinition(mode) " {{{
 	endif
 
 	let [symbol_file, symbol_line, symbol_col] = phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_imports)
-	if symbol_file == ''
+	if symbol_file == '' || symbol_file == v:false
 		return
 	endif
 
