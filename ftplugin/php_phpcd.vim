@@ -3,10 +3,6 @@ set cpo&vim
 
 let g:phpcd_root = '/'
 
-if !exists('g:phpcd_php_cli_executable')
-	let g:phpcd_php_cli_executable = 'php'
-endif
-
 function! GetComposerRoot() " {{{
 	let root = expand("%:p:h")
 
@@ -25,6 +21,13 @@ function! GetComposerRoot() " {{{
 endfunction " }}}
 
 let s:root = GetComposerRoot()
+if filereadable(s:root.'/.phpcd.vim')
+	exec 'source '.s:root.'/.phpcd.vim'
+endif
+
+if !exists('g:phpcd_php_cli_executable')
+	let g:phpcd_php_cli_executable = 'php'
+endif
 
 silent! nnoremap <silent> <unique> <buffer> <C-]>
 			\ :<C-u>call phpcd#JumpToDefinition('normal')<CR>
