@@ -194,7 +194,8 @@ class PHPCD implements RpcHandler
             }
 
             $doc = $reflection->getDocComment();
-            if (preg_match('/@return\s+(static|self|\$this)/i', $doc) && $reflection_class) {
+            // use reflection_class to fetch the property's file path
+            if (preg_match('/@return\s+(static|self|\$this)/i', $doc) || $reflection_class) {
                 $path = $reflection_class->getFileName();
             } else {
                 $path = $reflection->getFileName();
