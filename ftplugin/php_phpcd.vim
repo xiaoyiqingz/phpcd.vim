@@ -1,30 +1,6 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-let g:phpcd_root = '/'
-
-function! GetComposerRoot() " {{{
-	let root = expand("%:p:h")
-
-	if g:phpcd_root != '/' && stridx(root, g:phpcd_root) == 0
-		return g:phpcd_root
-	endif
-
-	while root != "/"
-		if (filereadable(root . "/vendor/autoload.php"))
-			break
-		endif
-		let root = fnamemodify(root, ":h")
-	endwhile
-	let g:phpcd_root = root
-	return root
-endfunction " }}}
-
-let s:root = GetComposerRoot()
-if filereadable(s:root.'/.phpcd.vim')
-	exec 'source '.s:root.'/.phpcd.vim'
-endif
-
 if !exists('g:phpcd_php_cli_executable')
 	let g:phpcd_php_cli_executable = 'php'
 endif
@@ -47,14 +23,14 @@ else
 end
 
 let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
-let s:autoload_path = s:root.'/'.g:phpcd_autoload_path
+let s:autoload_path = g:phpcd_root.'/'.g:phpcd_autoload_path
 if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, s:root, 'PHPCD', messenger, s:autoload_path])
+			\ [s:phpcd_path, g:phpcd_root, 'PHPCD', messenger, s:autoload_path])
 
-if s:root == '/'
+if g:phpcd_root == '/'
 	let &cpo = s:save_cpo
 	unlet s:save_cpo
 	finish
@@ -65,7 +41,7 @@ if exists('g:phpid_channel_id')
 endif
 
 let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, s:root, 'PHPID', messenger, s:autoload_path])
+			\ [s:phpcd_path, g:phpcd_root, 'PHPID', messenger, s:autoload_path])
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
