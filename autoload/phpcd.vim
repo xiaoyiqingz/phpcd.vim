@@ -124,6 +124,8 @@ function! phpcd#JumpToDefinition(mode) " {{{
 
 	if a:mode == 'normal'
 		let edit_cmd = "e +"
+	elseif a:mode == 'preview'
+		let edit_cmd = "pedit +"
 	else
 		let edit_cmd = a:mode . " +"
 	endif
@@ -131,6 +133,7 @@ function! phpcd#JumpToDefinition(mode) " {{{
 	let cur_pos = getcurpos()
 	let cur_pos[0] = bufnr('%')
 	call add(g:phpcd_jump_stack, cur_pos)
+
 	if str2nr(symbol_line) > 0
 		silent! execute edit_cmd . symbol_line . ' ' . symbol_file
 	else
