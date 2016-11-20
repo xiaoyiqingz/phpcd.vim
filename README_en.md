@@ -46,7 +46,7 @@ We recommend you use [Vim-Plug](https://github.com/junegunn/vim-plug/blob/master
 With Vim-Plug installed, put the following lines in your vimrc:
 
 ```
-Plug 'phpvim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
+Plug 'php-vim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
 ```
 
 And then execute `:PlugInstall` in the command mode.
