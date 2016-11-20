@@ -227,7 +227,6 @@ class PHPCD implements RpcHandler
         $alias_pattern = '/(?<suffix>[\\\\\w]+)(\s+as\s+(?<alias>\w+))?/';
         $class_pattern = '/^\s*\b((((final|abstract)\s+)?class)|interface|trait)\s+(?<class>\S+)/i';
 
-        $file = new \SplFileObject($path);
         $s = [
             'namespace' => '',
             'imports' => [
@@ -243,6 +242,11 @@ class PHPCD implements RpcHandler
             'class' => '',
         ];
 
+        if (!file_exists($path)) {
+            return $s;
+        }
+
+        $file = new \SplFileObject($path);
         foreach ($file as $line) {
             if (preg_match($class_pattern, $line, $matches)) {
                 $s['class'] = $matches['class'];
