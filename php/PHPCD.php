@@ -623,13 +623,9 @@ class PHPCD implements RpcHandler
                 $regex = sprintf('/%s/%s', implode('.*', array_map('preg_quote', str_split($pattern))), $modifiers);
 
                 return (bool)preg_match($regex, $fullString);
-
-            case self::MATCH_HEAD:
-                return (stripos($fullString, $pattern) === 0);
-                break;
+            default:
+                return stripos($fullString, $pattern) === 0;
         }
-
-        return false;
     }
 
     /**
