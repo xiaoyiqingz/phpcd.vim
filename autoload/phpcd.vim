@@ -259,7 +259,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 	else " {{{
 		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
-			let full_classname = s:GetFullName(namespace, classname);
+			let full_classname = s:GetFullName(namespace, classname)
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname)
 		else
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
