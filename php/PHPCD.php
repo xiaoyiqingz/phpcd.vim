@@ -117,13 +117,16 @@ class PHPCD implements RpcHandler
         try {
             if ($class_name) {
                 $reflection = new \ReflectionClass($class_name);
-                if ($method_name) {
-                    if ($reflection->hasMethod($method_name)) {
-                        $reflection = $reflection->getMethod($method_name);
-                    } elseif ($reflection->hasConstant($method_name)) {
-                        // 常量则返回 [ path, 'const CONST_NAME' ]
-                        return [$this->getConstPath($method_name, $reflection), 'const ' . $method_name];
-                    }
+
+                if (!$method_name) {
+                    $method_name = '__construct';
+                }
+
+                if ($reflection->hasMethod($method_name)) {
+                    $reflection = $reflection->getMethod($method_name);
+                } elseif ($reflection->hasConstant($method_name)) {
+                    // 常量则返回 [ path, 'const CONST_NAME' ]
+                    return [$this->getConstPath($method_name, $reflection), 'const ' . $method_name];
                 }
             } else {
                 $reflection = new \ReflectionFunction($method_name);
