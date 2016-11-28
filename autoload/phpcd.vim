@@ -628,7 +628,8 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(container_interface, a:current_namespace, a:imports)
 			return s:GetFullName(class_candidate_namespace, classname_candidate)
 		endif " }}}
-	elseif a:context =~? '^\$this->' || a:context =~? '^\(self\|static\)::' || a:context =~? 'parent::' " {{{
+	endif
+	if a:context =~? '^\$this->' || a:context =~? '^\(self\|static\)::' || a:context =~? 'parent::' " {{{
 		let i = 1
 		while i < a:start_line
 			let line = getline(a:start_line - i)
