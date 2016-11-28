@@ -621,7 +621,14 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 	let class_candidate_imports = a:imports
 	let methodstack = phpcd#GetMethodStack(a:context) " }}}
 
-	if a:context =~? '^\$this->' || a:context =~? '^\(self\|static\)::' || a:context =~? 'parent::' " {{{
+	if methodstack[-1] =~# '\vmake|app|get' " {{{
+		" just for laravel and container-interop
+		let container_interface = matchstr(methodstack[-1], '^\(make\|app\|get\)(\zs.\+\ze::class)')
+		if container_interface != ''
+			let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(container_interface, a:current_namespace, a:imports)
+			return s:GetFullName(class_candidate_namespace, classname_candidate)
+		endif " }}}
+	elseif a:context =~? '^\$this->' || a:context =~? '^\(self\|static\)::' || a:context =~? 'parent::' " {{{
 		let i = 1
 		while i < a:start_line
 			let line = getline(a:start_line - i)
@@ -690,12 +697,6 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		end " }}}
 		return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack) " }}}
 	elseif get(methodstack, 0) =~# function_invocation_pattern " {{{
-		" just for laravel {{{
-		let laravel_interface = matchstr(methodstack[0], '^app(\zs.\+\ze::class)$')
-		if laravel_interface != ''
-			let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(laravel_interface, a:current_namespace, a:imports)
-			return s:GetFullName(class_candidate_namespace, classname_candidate)
-		endif " }}}
 		let function_name = matchstr(methodstack[0], '^\s*\zs'.function_name_pattern)
 		let return_types = rpc#request(g:phpcd_channel_id, 'functype', '', function_name)
 		if len(return_types) > 0
