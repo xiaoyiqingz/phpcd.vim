@@ -419,7 +419,17 @@ class PHPCD implements RpcHandler
             }
         }
 
-        return $types;
+        return self::arrayUnique($types);
+    }
+
+    private static function arrayUnique($array)
+    {
+        $_ = [];
+        foreach ($array as $a) {
+            $_[$a] = 1;
+        }
+
+        return array_keys($_);
     }
 
     private $primitive_types = [
