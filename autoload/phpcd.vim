@@ -252,7 +252,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		let path = cwd.substitute(path, "'", '', 'g')
 		let path = fnamemodify(path, ':p:.')
 		return [path, '$', 0] "}}}
-	elseif a:symbol_context =~ '.\+@' " laravel route {{{
+	elseif a:symbol_context =~ '\v.+(\@|:)' " pattern like 'class@method' or 'class:method' {{{
 		let full_classname = strpart(a:symbol_context, 1, strlen(a:symbol_context)-2)
 		let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, a:symbol)
 		return [path, line, 0] " }}}
