@@ -118,10 +118,6 @@ class PHPCD implements RpcHandler
             if ($class_name) {
                 $reflection = new \ReflectionClass($class_name);
 
-                if (!$method_name) {
-                    $method_name = '__construct';
-                }
-
                 if ($reflection->hasMethod($method_name)) {
                     $reflection = $reflection->getMethod($method_name);
                 } elseif ($reflection->hasConstant($method_name)) {
