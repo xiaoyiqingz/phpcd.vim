@@ -26,6 +26,7 @@ end
 
 let s:phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
 let s:autoload_path = g:phpcd_root.'/'.g:phpcd_autoload_path
+let g:php_autoload_path = s:autoload_path
 if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
