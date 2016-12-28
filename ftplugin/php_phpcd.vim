@@ -31,7 +31,7 @@ if exists('g:phpcd_channel_id')
 	call rpc#stop(g:phpcd_channel_id)
 endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, g:phpcd_root, 'PHPCD', messenger, s:autoload_path])
+			\ s:phpcd_path, g:phpcd_root, 'PHPCD', messenger, s:autoload_path)
 
 if g:phpcd_root == '/'
 	let &cpo = s:save_cpo
@@ -44,7 +44,7 @@ if exists('g:phpid_channel_id')
 endif
 
 let g:phpid_channel_id = rpc#start(g:phpcd_php_cli_executable,
-			\ [s:phpcd_path, g:phpcd_root, 'PHPID', messenger, s:autoload_path])
+			\ s:phpcd_path, g:phpcd_root, 'PHPID', messenger, s:autoload_path)
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
