@@ -223,7 +223,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', classname, a:symbol)
 			return [path, line, 0]
 		endif " }}}
-	elseif a:symbol_context == 'new' || a:symbol_context =~ '\vimplements|extends'" {{{
+	elseif index(['new', 'use', 'implements', 'extends'], a:symbol_context) > -1 " {{{
 		let full_classname = s:GetFullName(a:symbol_namespace, a:symbol)
 		let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, '')
 		return [path, line, 0] " }}}
