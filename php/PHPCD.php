@@ -123,6 +123,9 @@ class PHPCD implements RpcHandler
                 } elseif ($reflection->hasConstant($method_name)) {
                     // 常量则返回 [ path, 'const CONST_NAME' ]
                     return [$this->getConstPath($method_name, $reflection), 'const ' . $method_name];
+                } elseif ($reflection->hasProperty($method_name)) {
+                    $line = $this->getPropertyDefLine($reflection, $method_name);
+                    return [$reflection->getFileName(), $line];
                 }
             } else {
                 $reflection = new \ReflectionFunction($method_name);
@@ -132,6 +135,20 @@ class PHPCD implements RpcHandler
         } catch (\ReflectionException $e) {
             return ['', null];
         }
+    }
+
+    private function getPropertyDefLine($classReflection, $property)
+    {
+        $class = new \SplFileObject($classReflection->getFileName());
+        $class->seek($classReflection->getStartLine());
+
+        $pattern = '/(private|protected|public|var)\s\$' . $property . '/x';
+        foreach ($class as $line => $content) {
+            if (preg_match($pattern, $content)) {
+                return $line + 1;
+            }
+        }
+        return $classReflection->getStartLine();
     }
 
     private function getConstPath($const_name, \ReflectionClass $reflection)
