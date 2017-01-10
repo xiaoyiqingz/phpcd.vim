@@ -715,7 +715,7 @@ class PHPCD implements RpcHandler
                 if (strpos($dir, $path) === 0) {
                     $sub_path = str_replace($path, '', $dir);
                     $sub_path = str_replace('/', '\\', $sub_path);
-                    $sub_namespace = trim(ucwords($sub_path, '\\'), '\\');
+                    $sub_namespace = trim($sub_path, '\\');
                     if ($sub_namespace) {
                         $sub_namespace = '\\' . $sub_namespace;
                     }
