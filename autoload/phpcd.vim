@@ -98,7 +98,12 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 endfunction " }}}
 
 function! phpcd#GetPsrNamespace() " {{{
-	return rpc#request(g:phpcd_channel_id, 'psr4ns', expand('%:p'))
+	let path = expand('%:p')
+	if !filereadable(path)
+		return ''
+	endif
+
+	return rpc#request(g:phpcd_channel_id, 'psr4ns', path))
 endfunction " }}}
 
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
@@ -351,7 +356,7 @@ function! phpcd#GetCurrentInstruction(line_number, col_number, phpbegin) " {{{
 	let first_coma_break_pos = -1
 	let next_char = len(line) < col_number ? line[col_number + 1] : ''
 
-	while !(line_number == 1 && col_number == 1)
+	while !(line_number <= 1 && col_number <= 1)
 		if current_char != -1
 			let next_char = current_char
 		endif
