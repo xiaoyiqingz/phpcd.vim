@@ -100,10 +100,10 @@ endfunction " }}}
 function! phpcd#GetPsrNamespace() " {{{
 	let path = expand('%:p')
 	if !filereadable(path)
-		return ''
+		return []
 	endif
 
-	return rpc#request(g:phpcd_channel_id, 'psr4ns', path))
+	return rpc#request(g:phpcd_channel_id, 'psr4ns', path)
 endfunction " }}}
 
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{

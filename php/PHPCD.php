@@ -686,6 +686,11 @@ class PHPCD implements RpcHandler
         $dir = dirname($path);
 
         $composer_path = $this->root . '/composer.json';
+
+        if (!is_readable($composer_path)) {
+            return [];
+        }
+
         $composer = json_decode(file_get_contents($composer_path), true);
 
         if (isset($composer['autoload']['psr-4'])) {
