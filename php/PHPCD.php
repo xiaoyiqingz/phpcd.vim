@@ -463,6 +463,10 @@ class PHPCD implements RpcHandler
             if (false !== $is_static) {
                 foreach ($reflection->getConstants() as $name => $value) {
                     if (!$pattern || $this->matchPattern($pattern, $name)) {
+                        if (is_array($value)) {
+                            $value = '[...]';
+                        }
+
                         $items[] = [
                             'word' => $name,
                             'abbr' => sprintf(" +@ %s %s", $name, $value),
