@@ -5,9 +5,8 @@ set_error_handler(function ($severity, $message, $file, $line) {
 });
 
 $root   = $argv[1];
-$daemon = $argv[2];
-$messenger = $argv[3];
-$autoload_file = $argv[4];
+$messenger = $argv[2];
+$autoload_file = $argv[3];
 
 /** load autoloader for PHPCD **/
 require __DIR__ . '/../vendor/autoload.php';
@@ -34,18 +33,8 @@ try {
         require $autoload_file;
     }
 
-    switch ($daemon) {
-        case 'PHPCD':
-            $handler = new PHPCD\PHPCD($root, $logger);
-            break;
-        case 'PHPID':
-            $handler = new PHPCD\PHPID($root, $logger);
-            break;
-        default:
-            throw new \InvalidArgumentException('The second parameter should be PHPCD or PHPID');
-    }
-
-    $server = new ForkServer($messenger, $handler);
+    $server = new ForkServer($messenger, new PHPCD\PHPCD($root, $logger));
+    $server->setHandler(new PHPCD\PHPID($root, $logger));
 
     $server->loop();
 } catch (\Throwable $e) {
