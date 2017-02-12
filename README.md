@@ -1,5 +1,4 @@
-- [中文](./README_zh.md)
-- English
+# phpcd - PHP Completion Daemon for Vim/NeoVim
 
 [![asciicast](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx.png)](https://asciinema.org/a/4dzyyjymrguylqt21igxlhhqx)
 
@@ -46,10 +45,12 @@ We recommend you use [Vim-Plug](https://github.com/junegunn/vim-plug/blob/master
 With Vim-Plug installed, put the following lines in your vimrc:
 
 ```
-Plug 'php-vim/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
+Plug 'lvht/phpcd.vim', { 'for': 'php' , 'do': 'composer update' }
 ```
 
 And then execute `:PlugInstall` in the command mode.
+
+**If you install phpcd manually, you need run `composer install` in the phpcd.vim root directory.**
 
 If you using the [deoplete](https://github.com/Shougo/deoplete.nvim), you can add the following lines to you init.vim
 
