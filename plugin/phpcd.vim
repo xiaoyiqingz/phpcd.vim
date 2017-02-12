@@ -2,6 +2,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:phpcd_root = '/'
+let g:phpcd_php_cli_executable = 'php'
 
 let s:root = phpcd#GetRoot()
 if filereadable(s:root.'/.phpcd.vim')

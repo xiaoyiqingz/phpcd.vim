@@ -1,10 +1,6 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-if !exists('g:phpcd_php_cli_executable')
-	let g:phpcd_php_cli_executable = 'php'
-endif
-
 silent! nnoremap <silent> <unique> <buffer> <C-]>
 			\ :<C-u>call phpcd#JumpToDefinition('normal')<CR>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
@@ -33,13 +29,9 @@ endif
 let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
 			\ s:phpcd_path, g:phpcd_root, messenger, s:autoload_path)
 
-if g:phpcd_root == '/'
-	let &cpo = s:save_cpo
-	unlet s:save_cpo
-	finish
+if g:phpcd_root != '/'
+	let g:phpid_channel_id = g:phpcd_channel_id
 endif
-
-let g:phpid_channel_id = g:phpcd_channel_id
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
