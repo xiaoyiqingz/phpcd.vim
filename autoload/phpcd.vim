@@ -137,7 +137,10 @@ function! phpcd#JumpToDefinition(mode) " {{{
 
 	let cur_pos = getcurpos()
 	let cur_pos[0] = bufnr('%')
-	call add(g:phpcd_jump_stack, cur_pos)
+	if !exists('s:phpcd_jump_stack')
+		let s:phpcd_jump_stack = []
+	endif
+	call add(s:phpcd_jump_stack, cur_pos)
 
 	if str2nr(symbol_line) > 0
 		silent! execute edit_cmd . symbol_line . ' ' . symbol_file
@@ -152,14 +155,14 @@ function! phpcd#JumpToDefinition(mode) " {{{
 endfunction " }}}
 
 function! phpcd#JumpBack() "{{{"
-	if len(g:phpcd_jump_stack) == 0
+	if len(s:phpcd_jump_stack) == 0
 		return
 	endif
 
-	let prev_pos = g:phpcd_jump_stack[-1]
+	let prev_pos = s:phpcd_jump_stack[-1]
 	let prev_buf = prev_pos[0]
 	let prev_pos[0] = 0
-	unlet g:phpcd_jump_stack[-1]
+	unlet s:phpcd_jump_stack[-1]
 	exec 'buffer '.prev_buf
 	call setpos('.', prev_pos)
 endfunction "}}}"
