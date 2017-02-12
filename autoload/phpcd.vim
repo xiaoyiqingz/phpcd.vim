@@ -1185,7 +1185,7 @@ function! phpcd#GetCallChainReturnTypeAt(line) " {{{
 	return classname
 endfunction " }}}
 
-function! s:GetFullName(namespace, classname)
+function! s:GetFullName(namespace, classname) " {{{
 	if a:namespace == '\'
 		let full_classname = a:classname
 	else
@@ -1193,6 +1193,35 @@ function! s:GetFullName(namespace, classname)
 	endif
 
 	return full_classname
-endfunction
+endfunction " }}}
+
+function! phpcd#GetRoot() " {{{
+	let root = expand("%:p:h")
+
+	if g:phpcd_root != '/' && stridx(root, g:phpcd_root) == 0
+		return g:phpcd_root
+	endif
+
+	let g:isFoundPHPCD = 0
+	while root != "/"
+		if (filereadable(root.'/.phpcd.vim'))
+			let g:isFoundPHPCD = 1
+			break
+		endif
+		let root = fnamemodify(root, ":h")
+	endwhile
+
+	if g:isFoundPHPCD != 1
+		let root = expand("%:p:h")
+		while root != "/"
+			if (filereadable(root . "/vendor/autoload.php"))
+				break
+			endif
+			let root = fnamemodify(root, ":h")
+		endwhile
+	endif
+	let g:phpcd_root = root
+	return root
+endfunction " }}}
 
 " vim: foldmethod=marker:noexpandtab:ts=2:sts=2:sw=2

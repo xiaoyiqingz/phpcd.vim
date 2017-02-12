@@ -2,36 +2,8 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 let g:phpcd_root = '/'
-function! GetRoot() " {{{
-	let root = expand("%:p:h")
 
-	if g:phpcd_root != '/' && stridx(root, g:phpcd_root) == 0
-		return g:phpcd_root
-	endif
-
-	let g:isFoundPHPCD = 0
-	while root != "/"
-		if (filereadable(root.'/.phpcd.vim'))
-			let g:isFoundPHPCD = 1
-			break
-		endif
-		let root = fnamemodify(root, ":h")
-	endwhile
-
-	if g:isFoundPHPCD != 1
-		let root = expand("%:p:h")
-		while root != "/"
-			if (filereadable(root . "/vendor/autoload.php"))
-				break
-			endif
-			let root = fnamemodify(root, ":h")
-		endwhile
-	endif
-	let g:phpcd_root = root
-	return root
-endfunction " }}}
-
-let s:root = GetRoot()
+let s:root = phpcd#GetRoot()
 if filereadable(s:root.'/.phpcd.vim')
 	exec 'source '.s:root.'/.phpcd.vim'
 endif
