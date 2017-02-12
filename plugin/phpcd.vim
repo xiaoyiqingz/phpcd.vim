@@ -3,17 +3,9 @@ set cpo&vim
 
 let g:phpcd_root = '/'
 let g:phpcd_php_cli_executable = 'php'
-
-let s:root = phpcd#GetRoot()
-if filereadable(s:root.'/.phpcd.vim')
-	exec 'source '.s:root.'/.phpcd.vim'
-endif
-
+let g:phpcd_autoload_path = 'vendor/autoload.php'
 let g:phpcd_need_update = 0
-
-if !exists('g:phpcd_autoload_path')
-	let g:phpcd_autoload_path = 'vendor/autoload.php'
-endif
+let g:phpcd_auto_restart = 0
 
 autocmd BufLeave,VimLeave *.php if g:phpcd_need_update > 0 | call phpcd#UpdateIndex() | endif
 autocmd BufWritePost *.php let g:phpcd_need_update = 1
