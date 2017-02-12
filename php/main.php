@@ -34,7 +34,7 @@ try {
     }
 
     $server = new ForkServer($messenger, new PHPCD\PHPCD($root, $logger));
-    $server->setHandler(new PHPCD\PHPID($root, $logger));
+    $server->addHandler(new PHPCD\PHPID($root, $logger));
 
     $server->loop();
 } catch (\Throwable $e) {
