@@ -31,7 +31,9 @@ function! Init() " {{{
 		call rpc#stop(g:phpcd_channel_id)
 
 		unlet g:phpcd_channel_id
-		unlet g:phpid_channel_id
+		if exists('g:phpid_channel_id')
+			unlet g:phpid_channel_id
+		endif
 	endif
 endfunction " }}}
 
