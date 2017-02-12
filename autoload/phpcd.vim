@@ -155,7 +155,7 @@ function! phpcd#JumpToDefinition(mode) " {{{
 endfunction " }}}
 
 function! phpcd#JumpBack() "{{{"
-	if len(s:phpcd_jump_stack) == 0
+	if !exists('s:phpcd_jump_stack') || len(s:phpcd_jump_stack) == 0
 		return
 	endif
 
