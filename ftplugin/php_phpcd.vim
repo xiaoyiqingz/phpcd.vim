@@ -35,8 +35,6 @@ function! Init() " {{{
 	endif
 endfunction " }}}
 
-echomsg phpcd#GetRoot() . "=>" . g:phpcd_root
-
 if (g:phpcd_auto_restart == 0 && g:phpcd_root == '/') || (g:phpcd_auto_restart == 1 && phpcd#GetRoot() != g:phpcd_root)
 	call Init()
 endif
