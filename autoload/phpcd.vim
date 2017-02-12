@@ -1223,7 +1223,6 @@ function! phpcd#GetRoot() " {{{
 			let root = fnamemodify(root, ":h")
 		endwhile
 	endif
-	let g:phpcd_root = root
 	return root
 endfunction " }}}
 
