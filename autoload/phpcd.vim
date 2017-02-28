@@ -1201,7 +1201,8 @@ function! s:GetFullName(namespace, classname) " {{{
 endfunction " }}}
 
 function! phpcd#GetRoot() " {{{
-	let root = expand("%:p:h")
+	let pwd = expand("%:p:h")
+	let root = pwd
 
 	if g:phpcd_root != '/' && stridx(root, g:phpcd_root) == 0
 		return g:phpcd_root
@@ -1209,14 +1210,15 @@ function! phpcd#GetRoot() " {{{
 
 	while root != "/"
 		if (filereadable(root.'/.phpcd.vim'))
-			break
+			return root
 		endif
 		let root = fnamemodify(root, ":h")
 	endwhile
 
+	let root = pwd
 	while root != "/"
 		if (filereadable(root . "/vendor/autoload.php"))
-			break
+			return root
 		endif
 		let root = fnamemodify(root, ":h")
 	endwhile
