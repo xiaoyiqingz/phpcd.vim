@@ -1207,24 +1207,20 @@ function! phpcd#GetRoot() " {{{
 		return g:phpcd_root
 	endif
 
-	let g:isFoundPHPCD = 0
 	while root != "/"
 		if (filereadable(root.'/.phpcd.vim'))
-			let g:isFoundPHPCD = 1
 			break
 		endif
 		let root = fnamemodify(root, ":h")
 	endwhile
 
-	if g:isFoundPHPCD != 1
-		let root = expand("%:p:h")
-		while root != "/"
-			if (filereadable(root . "/vendor/autoload.php"))
-				break
-			endif
-			let root = fnamemodify(root, ":h")
-		endwhile
-	endif
+	while root != "/"
+		if (filereadable(root . "/vendor/autoload.php"))
+			break
+		endif
+		let root = fnamemodify(root, ":h")
+	endwhile
+
 	return root
 endfunction " }}}
 
