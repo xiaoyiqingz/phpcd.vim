@@ -42,7 +42,7 @@ if (g:phpcd_auto_restart == 0 && g:phpcd_root == '/') || (g:phpcd_auto_restart =
 endif
 
 if !exists('g:phpcd_channel_id')
-	let phpcd_path = expand('<sfile>:p:h:h') . '/phpcd.vim.phar'
+	let phpcd_path = expand('<sfile>:p:h:h') . '/php/main.php'
 	let g:php_autoload_path = g:phpcd_root.'/'.g:phpcd_autoload_path
 	let g:phpcd_channel_id = rpc#start(g:phpcd_php_cli_executable,
 				\ phpcd_path, g:phpcd_root, messenger, g:php_autoload_path)
