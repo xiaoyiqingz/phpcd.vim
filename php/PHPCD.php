@@ -679,6 +679,9 @@ class PHPCD implements RpcHandler
                 continue;
             }
 
+            if (is_array($value)) {
+                $value = '[...]';
+            }
             $items[] = [
                 'word' => $name,
                 'abbr' => "@ $name = $value",
