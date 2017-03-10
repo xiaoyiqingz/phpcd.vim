@@ -318,8 +318,7 @@ class PHPCD implements RpcHandler
      */
     public function nsuse($path)
     {
-        $use_pattern =
-            '/^use\s+((?<type>(constant|function)) )?(?<left>[\\\\\w]+\\\\)?({)?(?<right>[\\\\,\w\s]+)(})?\s*;$/';
+        $use_pattern = '/^use\s+((?<type>(constant|function)) )?(?<left>[\\\\\w]+\\\\)?({)?(?<right>[\\\\,\w\s]+)(})?\s*;$/';
         $alias_pattern = '/(?<suffix>[\\\\\w]+)(\s+as\s+(?<alias>\w+))?/';
         $class_pattern = '/^\s*\b((((final|abstract)\s+)?class)|interface|trait)\s+(?<class>\S+)/i';
 
@@ -374,7 +373,11 @@ class PHPCD implements RpcHandler
                         if (empty($use_matches['type'])) {
                             $s['imports'][$alias] = $use_matches['left'] . $suffix;
                         }
-                        // @todo case when $use_matches['type'] is 'constant' or 'function'
+
+                        if (preg_match('/function\s+(?<func_name>[\w]+)/i', $expansion, $function_matches)) {
+                            $func_name = $function_matches['func_name'];
+                            $s['imports'][$func_name] = $use_matches['left'].$func_name;
+                        }
                     }
                 }
             }
