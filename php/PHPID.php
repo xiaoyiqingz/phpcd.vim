@@ -19,6 +19,8 @@ class PHPID implements RpcHandler
 
     private $root;
 
+    private $class_map = [];
+
     public function __construct($root, Logger $logger)
     {
         $this->root = $root;
@@ -97,6 +99,7 @@ class PHPID implements RpcHandler
 
         $this->vimOpenProgressBar(count($this->class_map));
 
+        $pipe = null;
         while ($this->class_map) {
             $pid = pcntl_fork();
 
