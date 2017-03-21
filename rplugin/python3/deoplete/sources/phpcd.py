@@ -5,7 +5,7 @@ class Source(Base):
         Base.__init__(self, vim)
 
         self.name = 'phpcd'
-        self.mark = '[php]'
+        self.mark = '[phpcd]'
         self.filetypes = ['php']
         self.is_bytepos = True
         self.input_pattern = '\w+|[^. \t]->\w*|\w+::\w*'
