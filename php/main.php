@@ -1,5 +1,4 @@
 <?php
-error_reporting(0);
 set_error_handler(function ($severity, $message, $file, $line) {
     throw new ErrorException($message, 0, $severity, $file, $line);
 });
@@ -19,6 +18,7 @@ use Lvht\MsgpackRpc\JsonMessenger;
 use Lvht\MsgpackRpc\StdIo;
 
 $log_path = getenv('HOME') . '/.phpcd.log';
+ini_set('error_log', $log_path);
 $logger = new Logger('PHPCD');
 $logger->pushHandler(new StreamHandler($log_path, Logger::DEBUG));
 if ($messenger == 'json') {
