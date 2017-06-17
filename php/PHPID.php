@@ -19,7 +19,8 @@ class PHPID implements RpcHandler
 
     private $root;
 
-    private $class_map = [];
+    private $class_path = [];
+    private $class_path_count = 0;
 
     public function __construct($root, Logger $logger)
     {
@@ -91,13 +92,17 @@ class PHPID implements RpcHandler
         $this->initIndexDir();
 
         exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1 >/dev/null');
-        $this->class_map = require $this->root
+        $class_path = require $this->root
             . '/vendor/composer/autoload_classmap.php';
+        foreach ($class_path as $class => $path) {
+            $this->class_path[] = [$class, $path];
+        }
+        $this->class_path_count = count($class_path);
 
-        $this->vimOpenProgressBar(count($this->class_map));
+        $this->vimOpenProgressBar($this->class_path_count);
 
         $pipe_path = tempnam(sys_get_temp_dir(), 'phpcd');
-        while ($this->class_map) {
+        while ($this->class_path_count) {
             $pid = pcntl_fork();
 
             if ($pid == -1) {
@@ -105,16 +110,14 @@ class PHPID implements RpcHandler
             } elseif ($pid > 0) {
                 // 父进程
                 pcntl_waitpid($pid, $status);
-                $data = file_get_contents($pipe_path);
-                $this->class_map = json_decode($data, true);
+                $this->class_path_count = file_get_contents($pipe_path);
             } else {
                 // 子进程
                 register_shutdown_function(function () use ($pipe_path) {
-                    $data = json_encode($this->class_map, true);
-                    file_put_contents($pipe_path, $data);
+                    file_put_contents($pipe_path, $this->class_path_count);
                 });
                 $this->_index();
-                file_put_contents($pipe_path, "[]");
+                file_put_contents($pipe_path, "0");
                 exit;
             }
         }
@@ -152,9 +155,10 @@ class PHPID implements RpcHandler
 
     private function _index()
     {
-        foreach ($this->class_map as $class_name => $file_path) {
-            unset($this->class_map[$class_name]);
+        while (--$this->class_path_count) {
             $this->vimUpdateProgressBar();
+            list($class_name, $file_path) = $this->class_path[$this->class_path_count];
+
             require $file_path;
             $this->update($class_name);
         }
