@@ -94,12 +94,9 @@ class PHPID implements RpcHandler
         $this->class_map = require $this->root
             . '/vendor/composer/autoload_classmap.php';
 
-        $pipe_path = sys_get_temp_dir() . '/' . uniqid();
-        posix_mkfifo($pipe_path, 0600);
-
         $this->vimOpenProgressBar(count($this->class_map));
 
-        $pipe = null;
+        $pipe_path = tempnam(sys_get_temp_dir(), 'phpcd');
         while ($this->class_map) {
             $pid = pcntl_fork();
 
@@ -107,25 +104,20 @@ class PHPID implements RpcHandler
                 die('could not fork');
             } elseif ($pid > 0) {
                 // 父进程
-                $pipe = fopen($pipe_path, 'r');
-                $data = fgets($pipe);
-                $this->class_map = json_decode(trim($data), true);
                 pcntl_waitpid($pid, $status);
+                $data = file_get_contents($pipe_path);
+                $this->class_map = json_decode($data, true);
             } else {
                 // 子进程
-                $pipe = fopen($pipe_path, 'w');
-                register_shutdown_function(function () use ($pipe) {
+                register_shutdown_function(function () use ($pipe_path) {
                     $data = json_encode($this->class_map, true);
-                    fwrite($pipe, "$data\n");
-                    fclose($pipe);
+                    file_put_contents($pipe_path, $data);
                 });
                 $this->_index();
-                fwrite($pipe, "[]\n");
-                fclose($pipe);
+                file_put_contents($pipe_path, "[]");
                 exit;
             }
         }
-        fclose($pipe);
         unlink($pipe_path);
         $this->vimCloseProgressBar();
     }
