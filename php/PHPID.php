@@ -95,16 +95,21 @@ class PHPID implements RpcHandler
 
         $files = $this->searchPhpFileList($this->root);
 
-        $this->vimOpenProgressBar(count($files));
-        foreach ($files as $file_path) {
-             $this->vimUpdateProgressBar();
-             $classes = Parser::getParentAndInterfaces($file_path);
+        $count = count($files);
+        $last = 0;
+        for ($i = 0; $i < $count; $i++) {
+             $classes = Parser::getParentAndInterfaces($files[$i]);
              foreach ($classes as $name => $class) {
                  $this->_update($name, $class['extends'], $class['implements']);
              }
-        }
 
-        $this->vimCloseProgressBar();
+             $percent = number_format(($i + 1) / $count * 100);
+             if ($percent != $last) {
+                 $this->server->call('vim_command', ["redraw | echo \"indexing $percent%\""]);
+                 $last = $percent;
+             }
+        }
+        $this->server->call('vim_command', ["redraw | echo \"\""]);
     }
 
     public static function searchPhpFileList($folder)
@@ -200,21 +205,5 @@ class PHPID implements RpcHandler
         } catch (\ReflectionException $e) {
             return [null, []];
         }
-    }
-
-    private function vimOpenProgressBar($max)
-    {
-        $cmd = 'let g:pb = vim#widgets#progressbar#NewSimpleProgressBar("Indexing:", ' . $max . ')';
-        $this->server->call('vim_command', [$cmd]);
-    }
-
-    private function vimUpdateProgressBar()
-    {
-        $this->server->call('vim_command', ['call g:pb.incr()']);
-    }
-
-    private function vimCloseProgressBar()
-    {
-        $this->server->call('vim_command', ['call g:pb.restore()']);
     }
 }
