@@ -19,9 +19,6 @@ class PHPID implements RpcHandler
 
     private $root;
 
-    private $class_path = [];
-    private $class_path_count = 0;
-
     public function __construct($root, Logger $logger)
     {
         $this->root = $root;
@@ -42,6 +39,11 @@ class PHPID implements RpcHandler
     {
         list($parent, $interfaces) = $this->getClassInfo($class_name);
 
+        $this->_update($class_name, $parent, $interface);
+    }
+
+    private function _update($class_name, $parent, $interfaces)
+    {
         if ($parent) {
             $this->updateParentIndex($parent, $class_name);
         }
@@ -91,38 +93,32 @@ class PHPID implements RpcHandler
     {
         $this->initIndexDir();
 
-        exec('composer dump-autoload -o -d ' . $this->root . ' 2>&1 >/dev/null');
-        $class_path = require $this->root
-            . '/vendor/composer/autoload_classmap.php';
-        foreach ($class_path as $class => $path) {
-            $this->class_path[] = [$class, $path];
+        $files = $this->searchPhpFileList($this->root);
+
+        $this->vimOpenProgressBar(count($files));
+        foreach ($files as $file_path) {
+             $this->vimUpdateProgressBar();
+             $classes = Parser::getParentAndInterfaces($file_path);
+             foreach ($classes as $name => $class) {
+                 $this->_update($name, $class['extends'], $class['implements']);
+             }
         }
-        $this->class_path_count = count($class_path);
 
-        $this->vimOpenProgressBar($this->class_path_count);
-
-        $pipe_path = tempnam(sys_get_temp_dir(), 'phpcd');
-        while ($this->class_path_count) {
-            $pid = pcntl_fork();
-
-            if ($pid == -1) {
-                die('could not fork');
-            } elseif ($pid > 0) {
-                // 父进程
-                pcntl_waitpid($pid, $status);
-                $this->class_path_count = file_get_contents($pipe_path);
-            } else {
-                // 子进程
-                register_shutdown_function(function () use ($pipe_path) {
-                    file_put_contents($pipe_path, $this->class_path_count);
-                });
-                $this->_index();
-                file_put_contents($pipe_path, "0");
-                exit;
-            }
-        }
-        unlink($pipe_path);
         $this->vimCloseProgressBar();
+    }
+
+    public static function searchPhpFileList($folder)
+    {
+        $iterator = new \RecursiveDirectoryIterator($folder);
+        $iterator = new \RecursiveIteratorIterator($iterator);
+        $iterator = new \RegexIterator($iterator, '/\.php$/i', \RegexIterator::MATCH);
+
+        $files = [];
+        foreach ($iterator as $info) {
+            $files[] = $info->getPathName();
+        }
+
+        return $files;
     }
 
     private function getIndexDir()
@@ -150,17 +146,6 @@ class PHPID implements RpcHandler
         $interfaces_dir = $this->getIntefacesDir();
         if (!is_dir($interfaces_dir)) {
             mkdir($interfaces_dir, 0700, true);
-        }
-    }
-
-    private function _index()
-    {
-        while (--$this->class_path_count) {
-            $this->vimUpdateProgressBar();
-            list($class_name, $file_path) = $this->class_path[$this->class_path_count];
-
-            require $file_path;
-            $this->update($class_name);
         }
     }
 
