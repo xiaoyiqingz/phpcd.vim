@@ -187,7 +187,7 @@ class PHPID implements RpcHandler
 
     private function getIndexFileName($name)
     {
-        return str_replace("\\", '_', $name);
+        return str_replace("\\", '_', $name).'.json';
     }
 
     private function getClassInfo($name) {
