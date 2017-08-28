@@ -370,13 +370,8 @@ class PHPCD implements RpcHandler
                         }
 
                         /** empty type means import of some class **/
-                        if (empty($use_matches['type'])) {
+                        if (empty($use_matches['type']) || $use_matches['type'] == 'function') {
                             $s['imports'][$alias] = $use_matches['left'] . $suffix;
-                        }
-
-                        if (preg_match('/function\s+(?<func_name>[\w]+)/i', $expansion, $function_matches)) {
-                            $func_name = $function_matches['func_name'];
-                            $s['imports'][$func_name] = $use_matches['left'].$func_name;
                         }
                     }
                 }
