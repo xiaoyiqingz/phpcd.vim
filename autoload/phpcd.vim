@@ -209,6 +209,7 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 
 	let current_instruction = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
 	let context = substitute(current_instruction, 'clone ', '', '')
+	let context = substitute(current_instruction, 'yield from', '', '')
 	let context = substitute(current_instruction, 'yield ', '', '')
 	let context = substitute(context, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
@@ -971,6 +972,11 @@ function! phpcd#UpdateIndex() " {{{
 
 	let g:phpcd_need_update = 0
 	let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+
+	if !nsuse.class
+		return
+	endif
+
 	let classname = nsuse.namespace . '\' . nsuse.class
 	return rpc#notify(g:phpid_channel_id, 'update', classname)
 endfunction " }}}
