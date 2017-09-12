@@ -697,7 +697,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		endwhile " }}}
 	elseif a:context =~? '(\s*new\s\+'.class_name_pattern.'\s*\(([^)]*)\)\?)->' " {{{
 		let classname_candidate = matchstr(a:context, '\cnew\s\+\zs'.class_name_pattern.'\ze')
-		if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
+		if classname_candidate =~? '\vstatic|self' " {{{
 			let i = 1
 			while i < a:start_line
 				let line = getline(a:start_line - i)
@@ -769,7 +769,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			" do in-file lookup of $var = new Class or $var = new [s|S]tatic
 			if line =~# '^\s*'.object.'\s*=\s*new\s\+'.class_name_pattern && !object_is_array " {{{
 				let classname_candidate = matchstr(line, object.'\c\s*=\s*new\s*\zs'.class_name_pattern.'\ze')
-				if classname_candidate == 'static' || classname_candidate == 'Static' " {{{
+				if classname_candidate =~? '\vstatic|self' " {{{
 					let i = 1
 					while i < a:start_line
 						let line = getline(a:start_line - i)
@@ -789,8 +789,8 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			endif " }}}
 
-			" do in-file lookup of $var = (new static)
-			if line =~# '^\s*'.object.'\s*=\s*(\s*new\s\+static\s*)' && !object_is_array " {{{
+			" do in-file lookup of $var = (new static|self)
+			if line =~? '^\s*'.object.'\s*=\s*(\s*new\s\+(static\|self)\s*)' && !object_is_array " {{{
 				let classname_candidate = '' " {{{
 				let i = 1
 				while i < a:start_line
