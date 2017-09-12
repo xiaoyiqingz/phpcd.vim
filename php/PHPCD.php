@@ -809,7 +809,7 @@ class PHPCD implements RpcHandler
         if (method_exists($method, 'getReturnType') && $method->hasReturnType()) {
             $returnType = " : " . (string)$method->getReturnType();
         }
-        $docblock = preg_replace('/\n[\s]*\*/', "\n *", $method->getDocComment());
+        $docblock = $this->clearDoc($method->getDocComment());
         return sprintf(
             "%s %s%s%s(\n%s)%s\n%s",
             $visibility,
