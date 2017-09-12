@@ -11,6 +11,7 @@ class PHPCD implements RpcHandler
     const MATCH_HEAD        = 'match_head';
 
     private $matchType;
+    private $disable_modifier;
 
     /**
      * @var Logger
@@ -24,10 +25,11 @@ class PHPCD implements RpcHandler
 
     private $root;
 
-    public function __construct($root, Logger $logger, $match_type = self::MATCH_HEAD)
+    public function __construct($root, Logger $logger, int $disable_modifier = 0, $match_type = self::MATCH_HEAD)
     {
         $this->logger = $logger;
         $this->root = $root;
+        $this->disable_modifier = $disable_modifier;
     }
 
     public function setServer(RpcServer $server)
@@ -639,7 +641,7 @@ class PHPCD implements RpcHandler
         foreach ($matches['names'] as $idx => $name) {
             $items[] = [
                 'word' => $name,
-                'abbr' => sprintf('%3s %s', '+', $name),
+                'abbr' => $this->disable_modifier ? $name : sprintf('%3s %s', '+', $name),
                 'info' => $matches['types'][$idx],
                 'kind' => 'p',
                 'icase' => 1,
@@ -665,9 +667,16 @@ class PHPCD implements RpcHandler
         $items = [];
         foreach ($matches['names'] as $idx => $name) {
             preg_match_all('/\$[a-zA-Z0-9_]+/mi', $matches['params'][$idx], $params);
+
+            if ($this->disable_modifier) {
+                $abbr = sprintf("%s(%s)", $name, join(', ', end($params)));
+            } else {
+                $abbr = sprintf("%3s %s(%s)", '+', $name, join(', ', end($params)));
+            }
+
             $items[] = [
                 'word' => $name,
-                'abbr' => sprintf("%3s %s (%s)", '+', $name, join(', ', end($params))),
+                'abbr' => $abbr,
                 'info' => $matches['types'][$idx],
                 'kind' => 'f',
                 'icase' => 1,
@@ -753,7 +762,7 @@ class PHPCD implements RpcHandler
 
         return [
             'word' => $name,
-            'abbr' => sprintf("%3s %s", $modifier, $name),
+            'abbr' => $modifier ? sprintf("%3s %s", $modifier, $name) : $name,
             'info' => preg_replace('#/?\*(\*|/)?#', '', $property->getDocComment()),
             'kind' => 'p',
             'icase' => 1,
@@ -836,10 +845,15 @@ class PHPCD implements RpcHandler
         }, $method->getParameters());
 
         $modifier = $this->getModifiers($method);
+        if ($modifier) {
+            $abbr = sprintf("%3s %s(%s)", $modifier, $name, join(', ', $params));
+        } else {
+            $abbr = sprintf("%s(%s)", $name, join(', ', $params));
+        }
 
         return [
             'word' => $name,
-            'abbr' => sprintf("%3s %s (%s)", $modifier, $name, join(', ', $params)),
+            'abbr' => $abbr,
             'info' => $this->getExtraMethodInfo($method),
             'kind' => 'f',
             'icase' => 1,
@@ -878,6 +892,10 @@ class PHPCD implements RpcHandler
 
     private function getModifiers($reflection)
     {
+        if ($this->disable_modifier) {
+            return '';
+        }
+
         $signs = '';
 
         $modifiers = $reflection->getModifiers();

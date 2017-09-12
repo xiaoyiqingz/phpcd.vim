@@ -88,4 +88,6 @@ let g:phpcd_php_cli_executable = 'php7.0'
 
 Use <kbd>Ctrl</kbd>+<kbd>x</kbd><kbd>Ctrl</kbd>+<kbd>o</kbd> to complete and use <kbd>ctrl</kbd>+<kbd>]</kbd> to go to the defination.
 
+If you use neosnippet, you may like to set `g:phpcd_disable_modifier` to `0`.
+
 Good luck :)
