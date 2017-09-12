@@ -782,8 +782,8 @@ class PHPCD implements RpcHandler
             $default = $param->getDefaultValueConstantName();
         } else {
             $default = $param->getDefaultValue();
-            if (is_string($default)) {
-                $default = "'$default'";
+            if (!is_string($default)) {
+                $default = json_encode($default);
             }
         }
         $paramString .= " = " . $default;
