@@ -969,4 +969,18 @@ class PHPCD implements RpcHandler
 
         return $namespaces;
     }
+
+    public function keyword()
+    {
+        $keywords = require __DIR__.'/keyword.php';
+        return array_map(function ($keyword) {
+            return [
+                'word' => $keyword,
+                'abbr' => $keyword,
+                'info' => '',
+                'kind' => 'd',
+                'icase' => 1,
+            ];
+        }, $keywords);
+    }
 }

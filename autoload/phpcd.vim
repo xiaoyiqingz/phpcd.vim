@@ -109,7 +109,8 @@ endfunction " }}}
 function! phpcd#CompleteGeneral(base, current_namespace, imports) " {{{
 	let base = substitute(a:base, '^\\', '', '')
 	let [pattern, namespace] = phpcd#ExpandClassName(a:base, a:current_namespace, a:imports)
-	return rpc#request(g:phpcd_channel_id, 'info', '', pattern)
+	return rpc#request(g:phpcd_channel_id, 'keyword')
+				\ + rpc#request(g:phpcd_channel_id, 'info', '', pattern)
 endfunction " }}}
 
 function! phpcd#JumpToDefinition(mode) " {{{
