@@ -1012,6 +1012,6 @@ class PHPCD implements RpcHandler
                 'kind' => 't',
                 'icase' => 1,
             ];
-        }, $classmap);
+        }, array_unique($classmap));
     }
 }
