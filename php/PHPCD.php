@@ -989,29 +989,29 @@ class PHPCD implements RpcHandler
         $use_fqdn = isset($pattern[0]) && $pattern[0] === "\\";
         $pattern = trim($pattern, "\\");
         $classmap_file = $this->root.'/vendor/composer/autoload_classmap.php';
+        $classmap = get_declared_traits() + get_declared_interfaces()
+            + get_declared_classes();
+
         if (is_readable($classmap_file)) {
-            $classmap = [];
             $_classmap = require $classmap_file;
             foreach ($_classmap as $name => $path) {
                 if ($this->matchPattern($pattern, $name)) {
                     $classmap[] = $name;
                 }
             }
-
-            return array_map(function ($name) use($use_fqdn) {
-                if ($use_fqdn) {
-                    $name = "\\".$name;
-                }
-                return [
-                    'word' => $name,
-                    'abbr' => $name,
-                    'info' => '',
-                    'kind' => 't',
-                    'icase' => 1,
-                ];
-            }, $classmap);
         }
 
-        return [];
+        return array_map(function ($name) use($use_fqdn) {
+            if ($use_fqdn) {
+                $name = "\\".$name;
+            }
+            return [
+                'word' => $name,
+                'abbr' => $name,
+                'info' => '',
+                'kind' => 't',
+                'icase' => 1,
+            ];
+        }, $classmap);
     }
 }
