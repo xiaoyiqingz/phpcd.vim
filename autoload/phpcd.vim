@@ -54,8 +54,14 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 
 		let [current_namespace, imports] = phpcd#GetCurrentNameSpace()
 
-		if context =~? '^use\s' || context ==? 'use' " {{{
-			" TODO complete use
+		if context =~? '\v^use\s*' " {{{
+			let classmap = rpc#request(g:phpcd_channel_id, 'classmap', a:base)
+
+			if len(classmap) == 0
+				echoerr "Maybe you need run composer -o first"
+			endif
+
+			return classmap
 		endif " }}}
 
 		if context =~ '\(->\|::\)$' " {{{

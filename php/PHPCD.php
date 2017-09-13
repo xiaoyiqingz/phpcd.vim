@@ -983,4 +983,32 @@ class PHPCD implements RpcHandler
             ];
         }, $keywords);
     }
+
+    public function classmap($pattern)
+    {
+        $pattern = trim($pattern, "\\");
+        $classmap_file = $this->root.'/vendor/composer/autoload_classmap.php';
+        if (is_readable($classmap_file)) {
+            $classmap = [];
+            $_classmap = require $classmap_file;
+            foreach ($_classmap as $name => $path) {
+                $this->logger->debug('lv', [$pattern, $name]);
+                if ($this->matchPattern($pattern, $name)) {
+                    $classmap[] = $name;
+                }
+            }
+
+            return array_map(function ($name) {
+                return [
+                    'word' => $name,
+                    'abbr' => $name,
+                    'info' => '',
+                    'kind' => 't',
+                    'icase' => 1,
+                ];
+            }, $classmap);
+        }
+
+        return [];
+    }
 }
