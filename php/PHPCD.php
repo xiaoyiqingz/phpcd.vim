@@ -358,15 +358,26 @@ class PHPCD implements RpcHandler
         }
 
         $file = new \SplFileObject($path);
+
+        $_line = '';
         foreach ($file as $line) {
             if (preg_match($class_pattern, $line, $matches)) {
                 $s['class'] = $matches['class'];
                 break;
             }
-            $line = trim($line);
-            if (!$line) {
+
+            $_line .= trim($line);
+            if (!($_line && preg_match('/;$/', $_line))) {
                 continue;
             }
+
+            $line = $_line;
+            $_line = '';
+
+            if (strpos($line, '<?php') === 0) {
+                $line = substr($line, 5);
+            }
+
             if (preg_match('/(<\?php)?\s*namespace\s+(.*);$/', $line, $matches)) {
                 $s['namespace'] = $matches[2];
             } elseif (strtolower(substr($line, 0, 3) == 'use')) {
