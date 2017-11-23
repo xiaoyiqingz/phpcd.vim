@@ -7,8 +7,6 @@ silent! nnoremap <silent> <unique> <buffer> <C-W><C-]>
 			\ :<C-u>call phpcd#JumpToDefinition('split')<CR>
 silent! nnoremap <silent> <unique> <buffer> <C-W><C-\>
 			\ :<C-u>call phpcd#JumpToDefinition('vsplit')<CR>
-silent! nnoremap <silent> <unique> <buffer> K
-			\ :<C-u>call phpcd#JumpToDefinition('preview')<CR>
 silent! nnoremap <silent> <unique> <buffer> <C-t>
 			\ :<C-u>call phpcd#JumpBack()<CR>
 
