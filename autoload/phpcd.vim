@@ -218,6 +218,15 @@ function! phpcd#GetCurrentSymbolWithContext() " {{{
 	let context = substitute(context, '\s*[$a-zA-Z_0-9\\\x7f-\xff]*$', '', '')
 	let context = substitute(context, '\s\+\([\-:]\)', '\1', '')
 
+	if current_instruction[0:3] == 'use ' && word != '' && word[0] != '\'
+		let class_begin = search('{', 'bnW', search('class|trait', 'bnW'))
+		let class_end = searchpair('{','','}','n')
+		let cline = line('.')
+		if cline < class_begin || cline > class_end
+			let word = '\'.word
+		endif
+	endif
+
 	let [current_namespace, current_imports] = phpcd#GetCurrentNameSpace()
 	if word != ''
 		let [symbol, symbol_namespace] = phpcd#ExpandClassName(word, current_namespace, current_imports)
