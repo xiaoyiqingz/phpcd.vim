@@ -752,23 +752,23 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			" scan the file backwards from current line for explicit type declaration (@var $variable Classname)
 			for line in lines
 				" in file lookup for /* @var $foo Class */
-				if line =~# '@var\s\+'.object.'\s\+'.class_name_pattern
+				if line =~# '@var\s\+'.object.'\s\+'.class_name_pattern "{{{
 					let classname_candidate = matchstr(line, '@var\s\+'.object.'\s\+\zs'.class_name_pattern.'\(\[\]\)\?')
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
-				endif
+				endif "}}}
 				" in file lookup for /* @var Class $foo */
-				if line =~# '@var\s\+'.class_name_pattern.'\s\+'.object
+				if line =~# '@var\s\+'.class_name_pattern.'\s\+'.object "{{{
 					let classname_candidate = matchstr(line, '@var\s\+\zs'.class_name_pattern.'\(\[\]\)\?\ze'.'\s\+'.object)
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
-				endif
+				endif "}}}
 				" in file lookup for function (Foo $foo)
-				if line =~# 'function\s*('.class_name_pattern . '\s\+' . object
+				if line =~# 'function\s*('.class_name_pattern . '\s\+' . object "{{{
 					let classname_candidate = matchstr(line, class_name_pattern . '\ze\s\+' . object)
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
-				endif
+				endif "}}}
 			endfor
 		endif " }}}
 
@@ -874,49 +874,13 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
-			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.class_name_pattern" {{{
-
-				" try to find the next non-comment or string ";" char
-				let start_col = match(line, '^\s*'.object.'\C\s*=\zs&\?\s\+\(clone\)\?\s*'.class_name_pattern)
-				let filelines = reverse(copy(lines))
-				let [pos, char] = s:getNextCharWithPos(filelines, [len(filelines) - i, start_col])
-				let chars_read = 1
-				let last_pos = pos
-				" function_boundary == 0 if we are not in a function
-				let real_lines_offset = len(function_boundary) == 1 ? 1 : function_boundary[0][0]
-				" read while end of the file
-				while char != 'EOF' && chars_read < 1000
-					let last_pos = pos
-					let [pos, char] = s:getNextCharWithPos(filelines, pos)
-					let chars_read += 1
-					" we got a candidate
-					if char == ';'
-						" pos values is relative to the function's lines,
-						" line 0 need to be offsetted with the line number
-						" where te function was started to get the line number
-						" in real buffer terms
-						let synIDName = synIDattr(synID(real_lines_offset + pos[0], pos[1] + 1, 0), 'name')
-						" it's not a comment or string, end search
-						if synIDName !~? 'comment\|string'
-							break
-						endif
-					endif
-				endwhile
-
-				let prev_context = phpcd#GetCurrentInstruction(real_lines_offset + last_pos[0], last_pos[1], b:phpbegin)
-				if prev_context == ''
-					" cannot get previous context give up
-					return
-				endif
-				let prev_class = phpcd#GetClassName(a:start_line - i, prev_context, a:current_namespace, a:imports)
-
-				if stridx(prev_class, '\') != -1
-					let classname_parts = split(prev_class, '\\\+')
+			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern " {{{
+				let c = matchstr(a:context, variable_name_pattern.'\zs.\+')
+				let classname = phpcd#GetTypeAt(a:start_line - i, c)
+				let classname_parts = split(classname, '\\\+')
+				if len(classname_parts) > 0
 					let classname_candidate = classname_parts[-1]
 					let class_candidate_namespace = join(classname_parts[0:-2], '\')
-				else
-					let classname_candidate = prev_class
-					let class_candidate_namespace = '\'
 				endif
 				break
 			endif " }}}
@@ -1209,6 +1173,19 @@ function! phpcd#GetCallChainReturnTypeAt(line) " {{{
 	exec 'normal! ' . a:line . 'G'
 	call search(';')
 	let [_, context, namespace, imports] = phpcd#GetCurrentSymbolWithContext()
+	let classname = phpcd#GetClassName(line('.'), context, namespace, imports)
+	q
+	return classname
+endfunction " }}}
+
+function! phpcd#GetTypeAt(line, context) " {{{
+	silent! below 1sp
+	exec 'normal! ' . a:line . 'G'
+	call search(';')
+	normal beh
+	let [_, context, namespace, imports] = phpcd#GetCurrentSymbolWithContext()
+	let instruction = phpcd#GetCurrentInstruction(line('.'), col('.'), [0,0])
+	let context = instruction.a:context
 	let classname = phpcd#GetClassName(line('.'), context, namespace, imports)
 	q
 	return classname
