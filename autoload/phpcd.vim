@@ -874,7 +874,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
-			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern " {{{
+			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern.';' " {{{
 				let c = matchstr(a:context, variable_name_pattern.'\zs.\+')
 				let classname = phpcd#GetTypeAt(a:start_line - i, c)
 				let classname_parts = split(classname, '\\\+')
