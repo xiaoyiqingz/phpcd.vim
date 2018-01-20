@@ -765,9 +765,6 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 					let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 					let classname_candidate = nsuse.class
 				end " }}}
-				if classname_candidate[0] == '\'
-					return classname_candidate
-				endif
 				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 				break
 			endif " }}}
@@ -880,20 +877,20 @@ endfunction " }}}
 
 function s:getArrayType(prev_class) " {{{
 	" the iterated expression should return an array type
-	if a:prev_class =~ '\[\]$'
+	if a:prev_class =~ '\[\]$' " {{{
 		let prev_class = matchstr(a:prev_class, '\v^[^[]+')
 	else
 		return ['', '']
-	endif
+	endif " }}}
 
-	if stridx(prev_class, '\') != -1
+	if stridx(prev_class, '\') != -1 " {{{
 		let classname_parts = split(prev_class, '\\\+')
 		let classname_candidate = classname_parts[-1]
 		let class_candidate_namespace = join(classname_parts[0:-2], '\')
 	else
 		let classname_candidate = prev_class
 		let class_candidate_namespace = '\'
-	endif
+	endif " }}}
 
 	return [classname_candidate, class_candidate_namespace]
 endfunction " }}}
