@@ -851,7 +851,12 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let prev_class = phpcd#GetClassName(a:start_line - i, sub_context, a:current_namespace, a:imports)
 
 				let [classname_candidate, class_candidate_namespace] = s:getArrayType(prev_class)
-				break
+				if classname_candidate != ''
+					break
+				else
+					let i += 1
+					continue
+				endif
 			endif " }}}
 
 			" catch clause with the variable in question
