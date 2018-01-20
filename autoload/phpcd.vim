@@ -789,6 +789,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			if line =~? 'function\s*(.\{-\}\s*'.object " {{{
 				" skip function () use($object)
 				if line =~? 'use\s*(.\{-\}'.object.'\>'
+					let i += 1
 					continue
 				endif
 
