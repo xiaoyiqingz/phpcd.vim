@@ -787,43 +787,33 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				return classname
 			endif " }}}
 
-			" function declaration line
-			if line =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(' " {{{
-				let function_lines = join(reverse(copy(lines)), " ")
-				" search for type hinted arguments {{{
-				if function_lines =~? 'function\(\s\+'.function_name_pattern.'\)\?\s*(.\{-}'.class_name_pattern.'\s\+'.object && !object_is_array
-					let f_args = matchstr(function_lines, '\cfunction\(\s\+'.function_name_pattern.'\)\?\s*(\zs.\{-}\ze)')
-					let args = split(f_args, '\s*\zs,\ze\s*')
-					for arg in args
-						if arg =~# object.'\(,\|$\)'
-							let classname_candidate = matchstr(arg, '\s*\zs'.class_name_pattern.'\ze\s\+'.object)
-							let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
-							break
-						endif
-					endfor
-					if classname_candidate != ''
-						break
-					endif
-				endif " }}}
+			" lambda declaration line
+			if line =~? 'function\s*(.\{-\}\s*'.object " {{{
+				" skip function () use($object)
+				if line =~? 'use\s*(.\{-\}'.object.'\>'
+					continue
+				endif
 
-				" search for docblock for the function {{{
-				let match_line = substitute(line, '\\', '\\\\', 'g')
-				let sccontent = getline(0, a:start_line - i)
-				let doc_str = phpcd#GetDocBlock(sccontent, match_line)
-				if doc_str != ''
-					let docblock = phpcd#ParseDocBlock(doc_str)
-					for param in docblock.params
-						if param.name =~? object
-							let classname_candidate = matchstr(param.type, class_name_pattern.'\(\[\]\)\?')
-							let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
-							break
-						endif
-					endfor
-					if classname_candidate != ''
-						break
+				" search for type hinted arguments
+				let classname_candidate = matchstr(line, '\c\zs'.class_name_pattern.'\ze\s\+'.object.'\>')
+				if classname_candidate
+					if classname_candidate[0] == '\'
+						return classname_candidate
 					endif
-				endif " }}}
+					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
+					break
+				endif
 			endif " }}}
+
+			" function declaration line
+			if line =~? 'function\s\+'.function_name_pattern.'\s*(.\{-\}\s*'.object " {{{
+				let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+				let classname = nsuse.namespace.'\'.nsuse.class
+				let funcname = matchstr(line, '\cfunction\s\+\zs'.function_name_pattern.'\ze')
+				let argtypes = rpc#request(g:phpcd_channel_id, 'argtype', classname, funcname, object, expand('%:p'))
+
+				return phpcd#SelectOne(argtypes)
+			endif " {{{
 
 			" assignment for the variable in question with a variable on the right hand side
 			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern.';' " {{{
@@ -916,144 +906,6 @@ function! phpcd#Index() "{{{
 	endif
 
 	call rpc#notify(g:phpid_channel_id, 'index')
-endfunction " }}}
-
-function! phpcd#GetDocBlock(sccontent, search) " {{{
-	let i = 0
-	let l = 0
-	let comment_start = -1
-	let comment_end = -1
-	let sccontent_len = len(a:sccontent)
-
-	while (i < sccontent_len)
-		let line = a:sccontent[i]
-		" search for a function declaration
-		if line =~? a:search
-			let l = i - 1
-			" start backward serch for the comment block
-			while l != 0
-				let line = a:sccontent[l]
-				" if it's a one line docblock like comment and we can just return it right away
-				if line =~? '^\s*\/\*\*.\+\*\/\s*$'
-					return substitute(line, '\v^\s*(\/\*\*\s*)|(\s*\*\/)\s*$', '', 'g')
-					"... or if comment end found save line position and end search
-				elseif line =~? '^\s*\*/'
-					let comment_end = l
-					break
-					" ... or the line doesn't blank (only whitespace or nothing) end search
-				elseif line !~? '^\s*$'
-					break
-				endif
-				let l -= 1
-			endwhile
-			" no comment found
-			if comment_end == -1
-				return ''
-			end
-
-			while l != 0
-				let line = a:sccontent[l]
-				if line =~? '^\s*/\*\*'
-					let comment_start = l
-					break
-				endif
-				let l -= 1
-			endwhile
-
-			" no docblock comment start found
-			if comment_start == -1
-				return ''
-			end
-
-			let comment_start += 1 " we dont need the /**
-			let comment_end   -= 1 " we dont need the */
-
-			" remove leading whitespace and '*'s
-			let docblock = join(map(copy(a:sccontent[comment_start :comment_end]), 'substitute(v:val, "^\\s*\\*\\s*", "", "")'), "\n")
-			return docblock
-		endif
-		let i += 1
-	endwhile
-	return ''
-endfunction " }}}
-
-function! phpcd#ParseDocBlock(docblock) " {{{
-	let res = {
-				\ 'description': '',
-				\ 'params': [],
-				\ 'return': {},
-				\ 'throws': [],
-				\ 'var': {},
-				\ }
-
-	let res.description = substitute(matchstr(a:docblock, '\zs\_.\{-}\ze\(@var\|@param\|@return\|$\)'), '\(^\_s*\|\_s*$\)', '', 'g')
-	let docblock_lines = split(a:docblock, "\n")
-
-	let param_lines = filter(copy(docblock_lines), 'v:val =~? "^@param"')
-	for param_line in param_lines
-		let parts = matchlist(param_line, '@param\s\+\(\S\+\)\s\+\(\S\+\)\s*\(.*\)')
-		if len(parts) > 0
-			call add(res.params, {
-						\ 'line': parts[0],
-						\ 'type': phpcd#GetTypeFromDocBlockParam(get(parts, 1, '')),
-						\ 'name': get(parts, 2, ''),
-						\ 'description': get(parts, 3, '')})
-		endif
-	endfor
-
-	let return_line = filter(copy(docblock_lines), 'v:val =~? "^@return"')
-	if len(return_line) > 0
-		let return_parts = matchlist(return_line[0], '@return\s\+\(\S\+\)\s*\(.*\)')
-		let res['return'] = {
-					\ 'line': return_parts[0],
-					\ 'type': phpcd#GetTypeFromDocBlockParam(get(return_parts, 1, '')),
-					\ 'description': get(return_parts, 2, '')}
-	endif
-
-	let exception_lines = filter(copy(docblock_lines), 'v:val =~? "^\\(@throws\\|@exception\\)"')
-	for exception_line in exception_lines
-		let parts = matchlist(exception_line, '^\(@throws\|@exception\)\s\+\(\S\+\)\s*\(.*\)')
-		if len(parts) > 0
-			call add(res.throws, {
-						\ 'line': parts[0],
-						\ 'type': phpcd#GetTypeFromDocBlockParam(get(parts, 2, '')),
-						\ 'description': get(parts, 3, '')})
-		endif
-	endfor
-
-	let var_line = filter(copy(docblock_lines), 'v:val =~? "^@var"')
-	if len(var_line) > 0
-		let var_parts = matchlist(var_line[0], '@var\s\+\(\S\+\)\s*\(.*\)')
-		let res['var'] = {
-					\ 'line': var_parts[0],
-					\ 'type': phpcd#GetTypeFromDocBlockParam(get(var_parts, 1, '')),
-					\ 'description': get(var_parts, 2, '')}
-	endif
-
-	return res
-endfunction " }}}
-
-function! phpcd#GetTypeFromDocBlockParam(docblock_type) " {{{
-	if a:docblock_type !~ '|'
-		return a:docblock_type
-	endif
-
-	let primitive_types = [
-				\ 'string', 'float', 'double', 'int',
-				\ 'scalar', 'array', 'bool', 'void', 'mixed',
-				\ 'null', 'callable', 'resource', 'object']
-
-	" add array of primitives to the list too, like string[]
-	let primitive_types += map(copy(primitive_types), 'v:val."[]"')
-	let types = split(a:docblock_type, '|')
-	let valid_types = []
-	for type in types
-		if index(primitive_types, type) == -1
-			call add(valid_types, type)
-		endif
-	endfor
-
-	return phpcd#SelectOne(valid_types)
 endfunction " }}}
 
 function! phpcd#GetCurrentNameSpace() " {{{
