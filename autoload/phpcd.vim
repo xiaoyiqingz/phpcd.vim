@@ -736,9 +736,10 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		let lines = reverse(getline(search_end_line, a:start_line - 1)) "}}}
 
 		" check Constant lookup {{{
-		let constant_object = matchstr(a:context, '\zs'.class_name_pattern.'\ze::')
-		if constant_object != ''
-			let classname_candidate = constant_object
+		let classname_candidate = matchstr(a:context, '\zs'.class_name_pattern.'\ze::')
+		if classname_candidate != ''
+			let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
+			return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 		endif "}}}
 
 		" scan the file backwards from the current line {{{
