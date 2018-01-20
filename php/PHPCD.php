@@ -444,7 +444,7 @@ class PHPCD implements RpcHandler
      */
     public function argtype($class_name, $func_name, $name, $path)
     {
-        if ($name[0] === '$') {
+        if ($name && $name[0] === '$') {
             $name = substr($name, 1);
         }
 

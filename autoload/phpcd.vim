@@ -161,7 +161,7 @@ function! phpcd#JumpToDefinition(mode) " {{{
 	normal! zz
 endfunction " }}}
 
-function! phpcd#JumpBack() "{{{"
+function! phpcd#JumpBack() "{{{
 	if !exists('s:phpcd_jump_stack') || len(s:phpcd_jump_stack) == 0
 		return
 	endif
@@ -172,7 +172,7 @@ function! phpcd#JumpBack() "{{{"
 	unlet s:phpcd_jump_stack[-1]
 	exec 'buffer '.prev_buf
 	call setpos('.', prev_pos)
-endfunction "}}}"
+endfunction "}}}
 
 function! phpcd#GetCurrentSymbolWithContext() " {{{
 	" Check if we are inside of PHP markup
