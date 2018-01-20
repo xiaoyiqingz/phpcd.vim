@@ -813,7 +813,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let argtypes = rpc#request(g:phpcd_channel_id, 'argtype', classname, funcname, object, expand('%:p'))
 
 				return phpcd#SelectOne(argtypes)
-			endif " {{{
+			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
 			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern.';' " {{{
@@ -838,26 +838,20 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				break
 			endif " }}}
 
+			if line =~? object.'\s*=\s*'.variable_name_pattern.'[' " {{{
+				let sub_context = matchstr(line, '=\s*\zs'.variable_name_pattern.'\ze[')
+				let prev_class = phpcd#GetClassName(a:start_line - i, sub_context, a:current_namespace, a:imports)
+
+				let [classname_candidate, class_candidate_namespace] = s:getArrayType(prev_class)
+				break
+			endif " }}}
+
 			" foreach with the variable in question
 			if line =~? 'foreach\s*(.\{-}\s\+'.object.'\s*)' " {{{
 				let sub_context = matchstr(line, 'foreach\s*(\s*\zs.\{-}\ze\s\+as')
 				let prev_class = phpcd#GetClassName(a:start_line - i, sub_context, a:current_namespace, a:imports)
 
-				" the iterated expression should return an array type
-				if prev_class =~ '\[\]$'
-					let prev_class = matchstr(prev_class, '\v^[^[]+')
-				else
-					return
-				endif
-
-				if stridx(prev_class, '\') != -1
-					let classname_parts = split(prev_class, '\\\+')
-					let classname_candidate = classname_parts[-1]
-					let class_candidate_namespace = join(classname_parts[0:-2], '\')
-				else
-					let classname_candidate = prev_class
-					let class_candidate_namespace = '\'
-				endif
+				let [classname_candidate, class_candidate_namespace] = s:getArrayType(prev_class)
 				break
 			endif " }}}
 
@@ -882,6 +876,26 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
 		endif " }}}
 	endif " }}}
+endfunction " }}}
+
+function s:getArrayType(prev_class) " {{{
+	" the iterated expression should return an array type
+	if a:prev_class =~ '\[\]$'
+		let prev_class = matchstr(a:prev_class, '\v^[^[]+')
+	else
+		return ['', '']
+	endif
+
+	if stridx(prev_class, '\') != -1
+		let classname_parts = split(prev_class, '\\\+')
+		let classname_candidate = classname_parts[-1]
+		let class_candidate_namespace = join(classname_parts[0:-2], '\')
+	else
+		let classname_candidate = prev_class
+		let class_candidate_namespace = '\'
+	endif
+
+	return [classname_candidate, class_candidate_namespace]
 endfunction " }}}
 
 function! phpcd#UpdateIndex() " {{{
