@@ -631,13 +631,6 @@ function! phpcd#GetMethodStack(line) " {{{
 endfunction " }}}
 
 function! phpcd#GetClassName(start_line, context, current_namespace, imports) " {{{
-	" Get class name
-	" Class name can be detected in few ways:
-	" - @var $myVar class
-	" - @var class $myVar
-	" - in the same line (php 5.4 (new Class)-> syntax)
-	" - line above
-
 	let class_name_pattern = '[a-zA-Z_\x7f-\xff\\][a-zA-Z_0-9\x7f-\xff\\]*' " {{{
 	let function_name_pattern = '[a-zA-Z_\x7f-\xff\\][a-zA-Z_0-9\x7f-\xff\\]*'
 	let function_invocation_pattern = '[a-zA-Z_\x7f-\xff\\][a-zA-Z_0-9\x7f-\xff\\]*('
@@ -732,7 +725,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			return phpcd#GetCallChainReturnType(return_type, '', class_candidate_imports, methodstack)
 		endif " }}}
 	else " {{{
-		" extract the variable name from the context
+		" extract the variable name from the context {{{
 		let object = methodstack[0]
 		let object_is_array = (object =~ '\v^[^[]+\[' ? 1 : 0)
 		let object = matchstr(object, variable_name_pattern)
@@ -740,60 +733,37 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 		let function_boundary = phpcd#GetCurrentFunctionBoundaries()
 		let search_end_line = max([1, function_boundary[0][0]])
 		" -1 makes us ignore the current line (where the completion was invoked
-		let lines = reverse(getline(search_end_line, a:start_line - 1))
+		let lines = reverse(getline(search_end_line, a:start_line - 1)) "}}}
 
-		" check Constant lookup
+		" check Constant lookup {{{
 		let constant_object = matchstr(a:context, '\zs'.class_name_pattern.'\ze::')
 		if constant_object != ''
 			let classname_candidate = constant_object
-		endif
+		endif "}}}
 
-		if classname_candidate == '' " {{{
-			" scan the file backwards from current line for explicit type declaration (@var $variable Classname)
-			for line in lines
+		" scan the file backwards from the current line {{{
+		let i = 1
+		for line in lines
 				" in file lookup for /* @var $foo Class */
 				if line =~# '@var\s\+'.object.'\s\+'.class_name_pattern "{{{
 					let classname_candidate = matchstr(line, '@var\s\+'.object.'\s\+\zs'.class_name_pattern.'\(\[\]\)\?')
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
 				endif "}}}
+
 				" in file lookup for /* @var Class $foo */
 				if line =~# '@var\s\+'.class_name_pattern.'\s\+'.object "{{{
 					let classname_candidate = matchstr(line, '@var\s\+\zs'.class_name_pattern.'\(\[\]\)\?\ze'.'\s\+'.object)
 					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 					break
 				endif "}}}
-				" in file lookup for function (Foo $foo)
-				if line =~# 'function\s*('.class_name_pattern . '\s\+' . object "{{{
-					let classname_candidate = matchstr(line, class_name_pattern . '\ze\s\+' . object)
-					let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
-					break
-				endif "}}}
-			endfor
-		endif " }}}
 
-		if classname_candidate != '' " {{{
-			return phpcd#GetCallChainReturnType(classname_candidate, class_candidate_namespace, class_candidate_imports, methodstack)
-		endif " }}}
-
-		" scan the file backwards from the current line {{{
-		let i = 1
-		for line in lines
-			" do in-file lookup of $var = new Class or $var = new [s|S]tatic
+			" do in-file lookup of $var = new Class or $var = new (s|S)tatic
 			if line =~# '^\s*'.object.'\s*=\s*new\s\+'.class_name_pattern && !object_is_array " {{{
 				let classname_candidate = matchstr(line, object.'\c\s*=\s*new\s*\zs'.class_name_pattern.'\ze')
 				if classname_candidate =~? '\vstatic|self' " {{{
-					let i = 1
-					while i < a:start_line
-						let line = getline(a:start_line - i)
-
-						if line =~? '\v^\s*(abstract\s+|final\s+)*\s*class\s'
-							let classname_candidate = matchstr(line, '\cclass\s\+\zs'.class_name_pattern.'\ze')
-							break
-						endif
-
-						let i += 1
-					endwhile
+					let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
+					let classname_candidate = nsuse.class
 				end " }}}
 				if classname_candidate[0] == '\'
 					return classname_candidate
@@ -801,24 +771,6 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
 				break
 			endif " }}}
-
-			" do in-file lookup of $var = (new static|self)
-			if line =~? '^\s*'.object.'\s*=\s*(\s*new\s\+(static\|self)\s*)' && !object_is_array " {{{
-				let classname_candidate = '' " {{{
-				let i = 1
-				while i < a:start_line
-					let line = getline(a:start_line - i)
-
-					if line =~? '\v^\s*(abstract\s+|final\s+)*\s*class\s'
-						let classname_candidate = matchstr(line, '\cclass\s\+\zs'.class_name_pattern.'\ze')
-						break
-					endif
-
-					let i += 1
-				endwhile " }}}
-				let [classname_candidate, class_candidate_namespace] = phpcd#ExpandClassName(classname_candidate, a:current_namespace, a:imports)
-				break
-			end " }}}
 
 			if line =~# '^\s*'.object.'\s*=\s*\(require\|include\).*' && !object_is_array " {{{
 				let path = matchstr(line, '\(require\|include\)\(_once\)\?\s*__DIR__\s*\.\s*\zs.*\ze;')
