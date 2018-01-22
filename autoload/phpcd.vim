@@ -811,7 +811,14 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let funcname = matchstr(line, '\cfunction\s\+\zs'.function_name_pattern.'\ze')
 				let argtypes = rpc#request(g:phpcd_channel_id, 'argtype', classname, funcname, object, expand('%:p'))
 
-				return phpcd#SelectOne(argtypes)
+				let classname = phpcd#SelectOne(argtypes)
+				let classname_parts = split(classname, '\\\+')
+				if len(classname_parts) == 0
+					return ''
+				endif
+				let classname_candidate = classname_parts[-1]
+				let class_candidate_namespace = join(classname_parts[0:-2], '\')
+				break
 			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
