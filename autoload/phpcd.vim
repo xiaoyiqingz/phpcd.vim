@@ -811,37 +811,21 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 				let funcname = matchstr(line, '\cfunction\s\+\zs'.function_name_pattern.'\ze')
 				let argtypes = rpc#request(g:phpcd_channel_id, 'argtype', classname, funcname, object, expand('%:p'))
 
-				let classname = phpcd#SelectOne(argtypes)
-				let classname_parts = split(classname, '\\\+')
-				if len(classname_parts) == 0
-					return ''
-				endif
-				let classname_candidate = classname_parts[-1]
-				let class_candidate_namespace = join(classname_parts[0:-2], '\')
+				let classname_candidate = phpcd#SelectOne(argtypes)
 				break
 			endif " }}}
 
 			" assignment for the variable in question with a variable on the right hand side
 			if line =~# '^\s*'.object.'\s*=&\?\s*\(clone\s\+\)\?\s*'.variable_name_pattern.';' " {{{
 				let c = matchstr(a:context, variable_name_pattern.'\zs.\+')
-				let classname = phpcd#GetTypeAt(a:start_line - i, c)
-				let classname_parts = split(classname, '\\\+')
-				if len(classname_parts) > 0
-					let classname_candidate = classname_parts[-1]
-					let class_candidate_namespace = join(classname_parts[0:-2], '\')
-				endif
+				let classname_candidate = phpcd#GetTypeAt(a:start_line - i, c)
 				break
 			endif " }}}
 
 			" assignment for the variable in question with function chains on the right hand side
 			if line =~? '^\s*' . object . '\s*=.*);\?$' " {{{
-				let classname = phpcd#GetCallChainReturnTypeAt(a:start_line - i)
-				let classname_parts = split(classname, '\\\+')
-				if len(classname_parts) > 0
-					let classname_candidate = classname_parts[-1]
-					let class_candidate_namespace = join(classname_parts[0:-2], '\')
-					break
-				endif
+				let classname_candidate = phpcd#GetCallChainReturnTypeAt(a:start_line - i)
+				break
 			endif " }}}
 
 			if line =~? object.'\s*=\s*'.variable_name_pattern.'[' " {{{
@@ -868,15 +852,7 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 
 			" catch clause with the variable in question
 			if line =~? 'catch\s*(\zs'.class_name_pattern.'\ze\s\+'.object " {{{
-				let classname = matchstr(line, 'catch\s*(\zs'.class_name_pattern.'\ze\s\+'.object)
-				if stridx(classname, '\') != -1
-					let classname_parts = split(classname, '\\\+')
-					let classname_candidate = classname_parts[-1]
-					let class_candidate_namespace = join(classname_parts[0:-2], '\')
-				else
-					let classname_candidate = classname
-					let class_candidate_namespace = '\'
-				endif
+				let classname_candidate = matchstr(line, 'catch\s*(\zs'.class_name_pattern.'\ze\s\+'.object)
 				break
 			endif " }}}
 
