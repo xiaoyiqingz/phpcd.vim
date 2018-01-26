@@ -449,8 +449,7 @@ class PHPCD implements RpcHandler
         }
 
         $type = $this->argTypeByHint($class_name, $func_name, $name, $path);
-        $this->logger->debug('hint:'.$type);
-        if ($type) {
+        if ($type && !$type->isBuiltin()) {
             return ["\\".$type];
         }
 
