@@ -76,6 +76,10 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 				endif
 			endif
 
+			if get(g:, 'phpcd_disable_static_filter', 0)
+					let is_static = 'both'
+			endif
+
 			return rpc#request(g:phpcd_channel_id, 'info', classname, a:base, is_static, public_only)
 		elseif context =~? 'implements'
 			" TODO complete class Foo implements
