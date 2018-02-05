@@ -1025,6 +1025,11 @@ endfunction " }}}
 
 function! phpcd#GetRoot() " {{{
 	let pwd = expand("%:p:h")
+
+	if pwd[0] != '/' " for editing non exists dir file
+		let pwd = '/'
+	endif
+
 	let root = pwd
 
 	if g:phpcd_root != '/' && stridx(root, g:phpcd_root) == 0
