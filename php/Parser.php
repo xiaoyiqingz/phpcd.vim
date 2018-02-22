@@ -3,11 +3,11 @@ namespace PHPCD;
 
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Node;
-
+use PhpParser\NodeTraverser;
 
 class Parser
 {
-    public static function getParentAndInterfaces($path)
+    public static function getClassName($path)
     {
         $parser = (new \PhpParser\ParserFactory)->create(\PhpParser\ParserFactory::PREFER_PHP7);
 
@@ -16,15 +16,13 @@ class Parser
 
         $visitor = new class extends \PhpParser\NodeVisitorAbstract
         {
-            public $classes = [];
+            public $class = null;
 
             public function leaveNode(Node $node)
             {
                 if ($node instanceof Node\Stmt\Class_ && isset($node->namespacedName)) {
-                    $this->classes[(string)$node->namespacedName] = [
-                        'implements' => array_map(function ($name) { return (string) $name; }, $node->implements),
-                        'extends' => $node->extends,
-                    ];
+                    $this->class = (string)$node->namespacedName;
+                    return NodeTraverser::STOP_TRAVERSAL;
                 }
             }
         };
@@ -34,12 +32,10 @@ class Parser
         try {
             $stmts = $parser->parse(file_get_contents($path));
             $stmts = $traverser->traverse($stmts);
-        } catch (\PhpParser\Error $e) {
-            // pass
-        } catch (\ErrorException $e) {
+        } catch (\Throwable $ignore) {
             // pass
         }
 
-        return $visitor->classes;
+        return $visitor->class;
     }
 }
