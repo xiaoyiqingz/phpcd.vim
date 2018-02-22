@@ -648,7 +648,7 @@ class PHPCD implements RpcHandler
         return $doc;
     }
 
-    public function getPseudoProperties(\ReflectionClass $reflection)
+    private function getPseudoProperties(\ReflectionClass $reflection)
     {
         $doc = $this->getAllClassDocComments($reflection);
         $all_docs = '';
@@ -675,7 +675,7 @@ class PHPCD implements RpcHandler
         return $items;
     }
 
-    public function getPseudoMethods(\ReflectionClass $reflection)
+    private function getPseudoMethods(\ReflectionClass $reflection)
     {
         $doc = $this->getAllClassDocComments($reflection);
         $all_docs = '';
