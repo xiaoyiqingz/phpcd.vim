@@ -3,6 +3,7 @@ namespace PHPCD;
 
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\NodeTraverser;
 
 class ClassNameVisitor extends NodeVisitorAbstract
 {
