@@ -348,7 +348,6 @@ class PHPCD implements RpcHandler
             $s['imports']['@'] = '';
         }
 
-        $this->logger->debug('nsuse', $s);
         $s['class'] = $s['name'];
         unset($s['name']);
 
