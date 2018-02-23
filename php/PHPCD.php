@@ -348,7 +348,8 @@ class PHPCD implements RpcHandler
             $s['imports']['@'] = '';
         }
 
-        $s['class'] = $s['name'];
+        $s['namespace'] = (string) $s['namespace'];
+        $s['class'] = (string) $s['name'];
         unset($s['name']);
 
         return $s;
