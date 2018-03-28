@@ -993,6 +993,9 @@ function! phpcd#GetCallChainReturnTypeAt(line) " {{{
 	finally
 		q
 	endtry
+	if classname[0] != '\'
+		let classname = '\'.classname
+	endif
 	return classname
 endfunction " }}}
 
