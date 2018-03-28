@@ -15,9 +15,6 @@ class PHPCD implements RpcHandler
 
     private $logger;
 
-    /**
-     * @var RpcServer
-     */
     private $server;
 
     private $root;
@@ -459,20 +456,30 @@ class PHPCD implements RpcHandler
         $types = $this->typeByDoc($path, $doc);
 
         if (!$types) {
-            $types = $this->proptypeByConstruct($class_name, $name);
+            $types = $this->proptypeByMethod($class_name, $name, '__construct');
+        }
+
+        if (!$types) {
+            $setter = 'set'.ucfirst($name);
+            $types = $this->proptypeByMethod($class_name, $name, $setter);
         }
 
         return $types;
     }
 
-    private function proptypeByConstruct($class_name, $name)
+    private function proptypeByMethod($class_name, $name, $method)
     {
         if (!class_exists($class_name, true)) {
             return [];
         }
 
         $reflection = new \ReflectionClass($class_name);
-        $constructor = $reflection->getConstructor();
+
+        if (!$reflection->hasMethod($method)) {
+            return [];
+        }
+
+        $constructor = $reflection->getMethod($method);
 
         if (!$constructor) {
             return [];
