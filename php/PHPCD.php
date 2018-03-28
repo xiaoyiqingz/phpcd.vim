@@ -13,9 +13,6 @@ class PHPCD implements RpcHandler
     private $matchType;
     private $disable_modifier;
 
-    /**
-     * @var Logger
-     */
     private $logger;
 
     /**
@@ -461,7 +458,47 @@ class PHPCD implements RpcHandler
         list($path, $doc) = $this->doc($class_name, $name, false);
         $types = $this->typeByDoc($path, $doc);
 
+        if (!$types) {
+            $types = $this->proptypeByConstruct($class_name, $name);
+        }
+
         return $types;
+    }
+
+    private function proptypeByConstruct($class_name, $name)
+    {
+        if (!class_exists($class_name, true)) {
+            return [];
+        }
+
+        $reflection = new \ReflectionClass($class_name);
+        $constructor = $reflection->getConstructor();
+
+        if (!$constructor) {
+            return [];
+        }
+
+        $path = $constructor->getFileName();
+        $start_line = $constructor->getStartLine();
+        $end_line = $constructor->getEndLine();
+
+        $lines = file($path);
+        $body_lines = array_slice($lines, $start_line, $end_line - $start_line);
+
+        foreach ($body_lines as $line) {
+            if (preg_match('/(\\$this'."-\\>|self::)$name\\s*=\\s*\\$(\\w+)\\s*;/", $line, $matches)) {
+                $value_name = $matches[2];
+                /** @var \ReflectionParameter $parameter */
+                foreach ($constructor->getParameters() as $parameter) {
+                    if ($parameter->getName() === $value_name) {
+                        $value_type = (string) $parameter->getType();
+                        return [$value_type];
+                    }
+                }
+            }
+        }
+
+        return [];
     }
 
     private function typeByReturnType($class_name, $name, $path)
