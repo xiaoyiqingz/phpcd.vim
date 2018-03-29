@@ -218,14 +218,14 @@ class PHPCD implements RpcHandler
 
     private function docClass($class_name, $name, $is_method)
     {
-        $reflection_class = new \ReflectionClass($class_name);
+        $reflection_class = new Reflection\ReflectionClass($class_name);
         $reflection = null;
 
         if ($is_method) {
             if ($reflection_class->hasMethod($name)) {
                 $reflection = $reflection_class->getMethod($name);
             } else {
-                $class_doc = $this->getAllClassDocComments($reflection_class);
+                $class_doc = $reflection_class->getAllClassDocComments();
                 $pattern = '/@method\s+(?<static>static)?\s*(?<type>\S+)\s+?'.$name.'/mi';
 
                 return $this->matchPatternToDoc($pattern, $class_doc);
@@ -234,7 +234,7 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasProperty($name)) {
                 $reflection = $reflection_class->getProperty($name);
             } else {
-                $class_doc = $this->getAllClassDocComments($reflection_class);
+                $class_doc = $reflection_class->getAllClassDocComments();
                 $pattern = '/@property(|-read|-write)\s+(?<type>\S+)\s+\$?'.$name.'/mi';
 
                 return $this->matchPatternToDoc($pattern, $class_doc);
@@ -627,7 +627,7 @@ class PHPCD implements RpcHandler
     private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
         try {
-            $reflection = new \PHPCD\Reflection\ReflectionClass($class_name);
+            $reflection = new Reflection\ReflectionClass($class_name);
             $items = [];
 
             if (false !== $is_static) {
@@ -665,10 +665,10 @@ class PHPCD implements RpcHandler
                 }
             }
 
-            $pseudo_items = $this->getPseudoMethods($reflection);
+            $pseudo_items = $reflection->getPseudoMethods($this->disable_modifier);
             $items = array_merge($items, $pseudo_items);
 
-            $pseudo_items = $this->getPseudoProperties($reflection);
+            $pseudo_items = $reflection->getPseudoProperties($this->disable_modifier);
             $items = array_merge($items, $pseudo_items);
 
             return $items;
@@ -677,6 +677,7 @@ class PHPCD implements RpcHandler
             return [];
         }
     }
+
     /**
      * Get class DocComment methods, from parents as well
      *
@@ -696,68 +697,6 @@ class PHPCD implements RpcHandler
         } while ($reflection); // gets the parents properties too
 
         return $doc;
-    }
-
-    private function getPseudoProperties(\ReflectionClass $reflection)
-    {
-        $doc = $this->getAllClassDocComments($reflection);
-        $all_docs = '';
-        foreach ($doc as $class_doc) {
-            $all_docs .= $class_doc;
-        }
-
-        $has_doc = preg_match_all('/@property(|-read|-write)\s+(?<types>\S+)\s+\$?(?<names>[a-zA-Z0-9_$]+)/mi', $all_docs, $matches);
-        if (!$has_doc) {
-            return [];
-        }
-
-        $items = [];
-        foreach ($matches['names'] as $idx => $name) {
-            $items[] = [
-                'word' => $name,
-                'abbr' => $this->disable_modifier ? $name : sprintf('%3s %s', '+', $name),
-                'info' => $matches['types'][$idx],
-                'kind' => 'p',
-                'icase' => 1,
-            ];
-        }
-
-        return $items;
-    }
-
-    private function getPseudoMethods(\ReflectionClass $reflection)
-    {
-        $doc = $this->getAllClassDocComments($reflection);
-        $all_docs = '';
-        foreach ($doc as $class_doc) {
-            $all_docs .= $class_doc;
-        }
-
-        $has_doc = preg_match_all('/@method\s+(?<statics>static)?\s*(?<types>\S+)\s+(?<names>[a-zA-Z0-9_$]+)\((?<params>.*)\)/mi', $all_docs, $matches);
-        if (!$has_doc) {
-            return [];
-        }
-
-        $items = [];
-        foreach ($matches['names'] as $idx => $name) {
-            preg_match_all('/\$[a-zA-Z0-9_]+/mi', $matches['params'][$idx], $params);
-
-            if ($this->disable_modifier) {
-                $abbr = sprintf("%s(%s)", $name, join(', ', end($params)));
-            } else {
-                $abbr = sprintf("%3s %s(%s)", '+', $name, join(', ', end($params)));
-            }
-
-            $items[] = [
-                'word' => $name,
-                'abbr' => $abbr,
-                'info' => $matches['types'][$idx],
-                'kind' => 'f',
-                'icase' => 1,
-            ];
-        }
-
-        return $items;
     }
 
     private function functionOrConstantInfo($pattern)
