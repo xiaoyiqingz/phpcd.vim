@@ -19,6 +19,33 @@ class PHPCD implements RpcHandler
 
     private $root;
 
+    /**
+     *  @param array Map between modifier numbers and displayed symbols
+     */
+    private $modifier_symbols = [
+        \ReflectionMethod::IS_FINAL      => '!',
+        \ReflectionMethod::IS_PRIVATE    => '-',
+        \ReflectionMethod::IS_PROTECTED  => '#',
+        \ReflectionMethod::IS_PUBLIC     => '+',
+        \ReflectionMethod::IS_STATIC     => '@'
+    ];
+
+    private $primitive_types = [
+        'array'    => 1,
+        'bool'     => 1,
+        'callable' => 1,
+        'double'   => 1,
+        'float'    => 1,
+        'int'      => 1,
+        'mixed'    => 1,
+        'null'     => 1,
+        'object'   => 1,
+        'resource' => 1,
+        'scalar'   => 1,
+        'string'   => 1,
+        'void'     => 1,
+    ];
+
     public function __construct($root, Logger $logger, $disable_modifier = 0, $match_type = self::MATCH_HEAD)
     {
         $this->logger = $logger;
@@ -44,17 +71,6 @@ class PHPCD implements RpcHandler
 
         $this->matchType = $matchType;
     }
-
-    /**
-     *  @param array Map between modifier numbers and displayed symbols
-     */
-    private $modifier_symbols = [
-        \ReflectionMethod::IS_FINAL      => '!',
-        \ReflectionMethod::IS_PRIVATE    => '-',
-        \ReflectionMethod::IS_PROTECTED  => '#',
-        \ReflectionMethod::IS_PUBLIC     => '+',
-        \ReflectionMethod::IS_STATIC     => '@'
-    ];
 
     /**
      * @param string $mode
@@ -608,22 +624,6 @@ class PHPCD implements RpcHandler
         return array_keys($_);
     }
 
-    private $primitive_types = [
-        'array'    => 1,
-        'bool'     => 1,
-        'callable' => 1,
-        'double'   => 1,
-        'float'    => 1,
-        'int'      => 1,
-        'mixed'    => 1,
-        'null'     => 1,
-        'object'   => 1,
-        'resource' => 1,
-        'scalar'   => 1,
-        'string'   => 1,
-        'void'     => 1,
-    ];
-
     private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
         try {
@@ -895,15 +895,6 @@ class PHPCD implements RpcHandler
         }
     }
 
-    /**
-     *
-     * @return array
-     */
-    private function getModifierSymbols()
-    {
-        return $this->modifier_symbols;
-    }
-
     private function getModifiers($reflection)
     {
         if ($this->disable_modifier) {
@@ -913,7 +904,7 @@ class PHPCD implements RpcHandler
         $signs = '';
 
         $modifiers = $reflection->getModifiers();
-        $symbols = $this->getModifierSymbols();
+        $symbols = $this->modifier_symbols;
 
         foreach ($symbols as $number => $sign) {
             if ($number & $modifiers) {
