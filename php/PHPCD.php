@@ -241,19 +241,29 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasMethod($name)) {
                 $reflection = $reflection_class->getMethod($name);
             } else {
-                $class_doc = $reflection_class->getAllClassDocComments();
-                $pattern = '/@method\s+(?<static>static)?\s*(?<type>\S+)\s+?'.$name.'/mi';
+                $methods = $reflection_class->getPseudoMethods();
 
-                return $this->matchPatternToDoc($pattern, $class_doc);
+                if (!isset($methods[$name])) {
+                    return ['', ''];
+                }
+
+                $method = $methods[$name];
+
+                return [$method['file'], '@var '.$method['type']];
             }
         } else {
             if ($reflection_class->hasProperty($name)) {
                 $reflection = $reflection_class->getProperty($name);
             } else {
-                $class_doc = $reflection_class->getAllClassDocComments();
-                $pattern = '/@property(|-read|-write)\s+(?<type>\S+)\s+\$?'.$name.'/mi';
+                $properties = $reflection_class->getPseudoProperties();
 
-                return $this->matchPatternToDoc($pattern, $class_doc);
+                if (!isset($properties[$name])) {
+                    return ['', ''];
+                }
+
+                $property = $properties[$name];
+
+                return [$property['file'], '@var '.$property['type']];
             }
         }
 
@@ -665,38 +675,39 @@ class PHPCD implements RpcHandler
                 }
             }
 
-            $pseudo_items = $reflection->getPseudoMethods($this->disable_modifier);
-            $items = array_merge($items, $pseudo_items);
+            $pseudo_methods = $reflection->getPseudoMethods();
+            foreach ($pseudo_methods as $name => $info) {
+                if ($this->disable_modifier) {
+                    $abbr = sprintf("%s(%s)", $name,  $info['params']);
+                } else {
+                    $abbr = sprintf("%3s %s(%s)", '+', $name, $info['params']);
+                }
 
-            $pseudo_items = $reflection->getPseudoProperties($this->disable_modifier);
-            $items = array_merge($items, $pseudo_items);
+                $items[] = [
+                    'word' => $name,
+                    'abbr' => $abbr,
+                    'info' => $info['type'],
+                    'kind' => 'f',
+                    'icase' => 1,
+                ];
+            }
+
+            $pseudo_properties = $reflection->getPseudoProperties();
+            foreach ($pseudo_properties as $name => $info) {
+                $items[] = [
+                    'word' => $name,
+                    'abbr' => $this->disable_modifier ? $name : sprintf('%3s %s', '+', $name),
+                    'info' => $info['type'],
+                    'kind' => 'p',
+                    'icase' => 1,
+                ];
+            }
 
             return $items;
         } catch (\ReflectionException $e) {
             $this->logger->debug($e->getMessage());
             return [];
         }
-    }
-
-    /**
-     * Get class DocComment methods, from parents as well
-     *
-     * @param \ReflectionClass
-     *
-     * @return string
-     *
-     * @author yourname
-     */
-    private function getAllClassDocComments(\ReflectionClass $reflection)
-    {
-        $doc = [];
-        do {
-            $file_name = $reflection->getFileName();
-            $doc[$file_name] = $reflection->getDocComment();
-            $reflection = $reflection->getParentClass();
-        } while ($reflection); // gets the parents properties too
-
-        return $doc;
     }
 
     private function functionOrConstantInfo($pattern)

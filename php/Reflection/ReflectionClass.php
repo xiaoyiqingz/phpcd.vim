@@ -78,7 +78,7 @@ class ReflectionClass extends \ReflectionClass
         return $element->getDeclaringClass()->getName() === $this->getName();
     }
 
-    public function getAllClassDocComments()
+    private function getAllClassDocComments()
     {
         $reflection = $this;
         $doc = [];
@@ -92,65 +92,48 @@ class ReflectionClass extends \ReflectionClass
         return $doc;
     }
 
-    public function getPseudoProperties(bool $disable_modifier = false)
+    public function getPseudoProperties()
     {
-        $doc = $this->getAllClassDocComments();
-        $all_docs = '';
-        foreach ($doc as $class_doc) {
-            $all_docs .= $class_doc;
-        }
+        $properties = [];
 
-        $has_doc = preg_match_all('/@property(|-read|-write)\s+(?<types>\S+)\s+\$?(?<names>[a-zA-Z0-9_$]+)/mi', $all_docs, $matches);
-        if (!$has_doc) {
-            return [];
-        }
+        foreach ($this->getAllClassDocComments() as $file_name => $doc) {
+            $has_doc = preg_match_all('/@property(|-read|-write)\s+(?<types>\S+)\s+\$?(?<names>[a-zA-Z0-9_$]+)/mi', $doc, $matches);
 
-        $items = [];
-        foreach ($matches['names'] as $idx => $name) {
-            $items[] = [
-                'word' => $name,
-                'abbr' => $disable_modifier ? $name : sprintf('%3s %s', '+', $name),
-                'info' => $matches['types'][$idx],
-                'kind' => 'p',
-                'icase' => 1,
-            ];
-        }
-
-        return $items;
-    }
-
-    public function getPseudoMethods(bool $disable_modifier = false)
-    {
-        $doc = $this->getAllClassDocComments();
-        $all_docs = '';
-        foreach ($doc as $class_doc) {
-            $all_docs .= $class_doc;
-        }
-
-        $has_doc = preg_match_all('/@method\s+(?<statics>static)?\s*(?<types>\S+)\s+(?<names>[a-zA-Z0-9_$]+)\((?<params>.*)\)/mi', $all_docs, $matches);
-        if (!$has_doc) {
-            return [];
-        }
-
-        $items = [];
-        foreach ($matches['names'] as $idx => $name) {
-            preg_match_all('/\$[a-zA-Z0-9_]+/mi', $matches['params'][$idx], $params);
-
-            if ($disable_modifier) {
-                $abbr = sprintf("%s(%s)", $name, join(', ', end($params)));
-            } else {
-                $abbr = sprintf("%3s %s(%s)", '+', $name, join(', ', end($params)));
+            if (!$has_doc) {
+                continue;
             }
 
-            $items[] = [
-                'word' => $name,
-                'abbr' => $abbr,
-                'info' => $matches['types'][$idx],
-                'kind' => 'f',
-                'icase' => 1,
-            ];
+            foreach ($matches['names'] as $idx => $name) {
+                $properties[$name] = [
+                    'type' => $matches['types'][$idx],
+                    'file' => $file_name,
+                ];
+            }
         }
 
-        return $items;
+        return $properties;
+    }
+
+    public function getPseudoMethods()
+    {
+        $methods = [];
+
+        foreach ($this->getAllClassDocComments() as $file_name => $doc) {
+            $has_doc = preg_match_all('/@method\s+(?<statics>static)?\s*(?<types>\S+)\s+(?<names>[a-zA-Z0-9_$]+)\((?<params>.*)\)/mi', $doc, $matches);
+
+            if (!$has_doc) {
+                continue;
+            }
+
+            foreach ($matches['names'] as $idx => $name) {
+                $methods[$name] = [
+                    'file' => $file_name,
+                    'type' => $matches['types'][$idx],
+                    'params' => $matches['params'][$idx],
+                ];
+            }
+        }
+
+        return $methods;
     }
 }
