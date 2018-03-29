@@ -493,8 +493,13 @@ class PHPCD implements RpcHandler
         $body_lines = array_slice($lines, $start_line, $end_line - $start_line);
 
         foreach ($body_lines as $line) {
-            if (preg_match('/(\\$this'."-\\>|self::)$name\\s*=\\s*\\$(\\w+)\\s*;/", $line, $matches)) {
-                $value_name = $matches[2];
+            if (preg_match('/(\\$this'."-\\>|self::\\$)$name\\s*=\\s*(new\s+|\\$)([\\w\\\\]+)\b/i", $line, $matches)) {
+                if ($matches[2][0] == 'n') { // $this->foo = new Foo;
+                    $types = [$matches[3]];
+                    return $this->fixRelativeType($path, $types);
+                }
+
+                $value_name = $matches[3];
                 /** @var \ReflectionParameter $parameter */
                 foreach ($constructor->getParameters() as $parameter) {
                     if ($parameter->getName() === $value_name) {
