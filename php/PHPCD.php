@@ -7,11 +7,12 @@ use Lvht\MsgpackRpc\Handler as RpcHandler;
 
 class PHPCD implements RpcHandler
 {
-    const MATCH_SUBSEQUENCE = 'match_subsequence';
-    const MATCH_HEAD        = 'match_head';
-
-    private $matchType;
     private $disable_modifier;
+
+    /**
+     * @var Matcher\Matcher
+     */
+    private $matcher;
 
     private $logger;
 
@@ -46,11 +47,12 @@ class PHPCD implements RpcHandler
         'void'     => 1,
     ];
 
-    public function __construct($root, Logger $logger, $disable_modifier = 0, $match_type = self::MATCH_HEAD)
+    public function __construct($root, Logger $logger, $disable_modifier = 0)
     {
         $this->logger = $logger;
         $this->root = $root;
         $this->disable_modifier = $disable_modifier;
+        $this->matcher = Matcher\Factory::make('prefix');
     }
 
     public function setServer(RpcServer $server)
@@ -61,15 +63,11 @@ class PHPCD implements RpcHandler
     /**
      * Set type of matching
      *
-     * @param string $matchType
+     * @param string $type matcher type, support prefix, substr, fuzzy
      */
-    public function setMatchType($matchType)
+    public function setMatchType($type)
     {
-        if ($matchType !== self::MATCH_SUBSEQUENCE && $matchType !== self::MATCH_HEAD) {
-            throw new \InvalidArgumentException('Wrong match type');
-        }
-
-        $this->matchType = $matchType;
+        $this->matcher = Matcher\Factory::make($type);
     }
 
     /**
@@ -215,14 +213,12 @@ class PHPCD implements RpcHandler
 
         if (isset($nsuse['alias'][$name])) {
             $_name = $nsuse['alias'][$name];
-            if (function_exists($_name)) {
-                $name = $_name;
-            }
         } else {
             $_name = $nsuse['namespace'].'\\'.$name;
-            if (function_exists($_name)) {
-                $name = $_name;
-            }
+        }
+
+        if (function_exists($_name)) {
+            $name = $_name;
         }
 
         $reflection = new \ReflectionFunction($name);
@@ -241,7 +237,7 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasMethod($name)) {
                 $reflection = $reflection_class->getMethod($name);
             } else {
-                $methods = $reflection_class->getPseudoMethods();
+                $methods = $reflection_class->getPseudoMethods($name);
 
                 if (!isset($methods[$name])) {
                     return ['', ''];
@@ -255,7 +251,7 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasProperty($name)) {
                 $reflection = $reflection_class->getProperty($name);
             } else {
-                $properties = $reflection_class->getPseudoProperties();
+                $properties = $reflection_class->getPseudoProperties($name);
 
                 if (!isset($properties[$name])) {
                     return ['', ''];
@@ -285,27 +281,6 @@ class PHPCD implements RpcHandler
         }
 
         return [$path, $this->clearDoc($doc)];
-    }
-
-    /**
-     * Matches the give pattern to the DocComments provided
-     * Expects $docs to be an array with the file name as key
-     *
-     * @param string $pattern
-     * @param array $docs
-     *
-     * @return array
-     */
-    private function matchPatternToDoc($pattern, $docs)
-    {
-        foreach ($docs as $file => $doc) {
-            $has_pseudo_method = preg_match($pattern, $doc, $matches);
-            if ($has_pseudo_method) {
-                return [$file, '@var '.$matches['type']];
-            }
-        }
-
-        return ['', ''];
     }
 
     /**
@@ -636,13 +611,15 @@ class PHPCD implements RpcHandler
 
     private function classInfo($class_name, $pattern, $is_static, $public_only)
     {
+        $items = [];
+
         try {
             $reflection = new Reflection\ReflectionClass($class_name);
-            $items = [];
+            $reflection->setMatcher($this->matcher);
 
             if (false !== $is_static) {
-                foreach ($reflection->getConstants() as $name => $value) {
-                    if (!$pattern || $this->matchPattern($pattern, $name)) {
+                foreach ($reflection->getAvailableConstants($pattern) as $name => $value) {
+                    {
                         if (is_array($value)) {
                             $value = '[...]';
                         }
@@ -657,25 +634,19 @@ class PHPCD implements RpcHandler
                 }
             }
 
-            $methods = $reflection->getAvailableMethods($is_static, $public_only);
+            $methods = $reflection->getAvailableMethods($is_static, $public_only, $pattern);
 
             foreach ($methods as $method) {
-                $info = $this->getMethodInfo($method, $pattern);
-                if ($info) {
-                    $items[] = $info;
-                }
+                $items[] = $this->getMethodInfo($method);
             }
 
-            $properties = $reflection->getAvailableProperties($is_static, $public_only);
+            $properties = $reflection->getAvailableProperties($is_static, $public_only, $pattern);
 
             foreach ($properties as $property) {
-                $info = $this->getPropertyInfo($property, $pattern);
-                if ($info) {
-                    $items[] = $info;
-                }
+                $items[] = $this->getPropertyInfo($property);
             }
 
-            $pseudo_methods = $reflection->getPseudoMethods();
+            $pseudo_methods = $reflection->getPseudoMethods($pattern);
             foreach ($pseudo_methods as $name => $info) {
                 if ($this->disable_modifier) {
                     $abbr = sprintf("%s(%s)", $name,  $info['params']);
@@ -692,7 +663,7 @@ class PHPCD implements RpcHandler
                 ];
             }
 
-            $pseudo_properties = $reflection->getPseudoProperties();
+            $pseudo_properties = $reflection->getPseudoProperties($pattern);
             foreach ($pseudo_properties as $name => $info) {
                 $items[] = [
                     'word' => $name,
@@ -706,8 +677,9 @@ class PHPCD implements RpcHandler
             return $items;
         } catch (\ReflectionException $e) {
             $this->logger->debug($e->getMessage());
-            return [];
         }
+
+        return $items;
     }
 
     private function functionOrConstantInfo($pattern)
@@ -734,10 +706,6 @@ class PHPCD implements RpcHandler
     {
         $items = [];
         foreach (get_defined_constants() as $name => $value) {
-            if ($pattern && strpos($name, $pattern) !== 0) {
-                continue;
-            }
-
             if (is_array($value)) {
                 $value = '[...]';
             }
@@ -752,9 +720,9 @@ class PHPCD implements RpcHandler
         return $items;
     }
 
-    private function getFunctionInfo($name, $pattern = null)
+    private function getFunctionInfo($name, $pattern)
     {
-        if ($pattern && strpos($name, $pattern) !== 0) {
+        if (!$this->matcher->match($pattern, $name)) {
             return null;
         }
 
@@ -772,12 +740,9 @@ class PHPCD implements RpcHandler
         ];
     }
 
-    private function getPropertyInfo($property, $pattern)
+    private function getPropertyInfo($property)
     {
         $name = $property->getName();
-        if ($pattern && !$this->matchPattern($pattern, $name)) {
-            return null;
-        }
 
         $modifier = $this->getModifiers($property);
         if ($property->getModifiers() & \ReflectionMethod::IS_STATIC) {
@@ -858,12 +823,9 @@ class PHPCD implements RpcHandler
         );
     }
 
-    private function getMethodInfo(\ReflectionMethod $method, $pattern = null)
+    private function getMethodInfo(\ReflectionMethod $method)
     {
         $name = $method->getName();
-        if ($pattern && !$this->matchPattern($pattern, $name)) {
-            return null;
-        }
 
         $params = array_map(function ($param) {
             return $param->getName();
@@ -883,27 +845,6 @@ class PHPCD implements RpcHandler
             'kind' => 'f',
             'icase' => 1,
         ];
-    }
-
-    /**
-     * @return bool
-     */
-    private function matchPattern($pattern, $fullString)
-    {
-        if (!$pattern) {
-            return true;
-        }
-
-        switch ($this->matchType) {
-            case self::MATCH_SUBSEQUENCE:
-                // @TODO Case sensitivity of matching should be probably configurable
-                $modifiers = 'i';
-                $regex = sprintf('/%s/%s', implode('.*', array_map('preg_quote', str_split($pattern))), $modifiers);
-
-                return (bool)preg_match($regex, $fullString);
-            default:
-                return stripos($fullString, $pattern) === 0;
-        }
     }
 
     private function getModifiers($reflection)
@@ -1017,7 +958,7 @@ class PHPCD implements RpcHandler
 
         $classmap = [];
         foreach ($defined as $name) {
-            if ($this->matchPattern($pattern, $name)) {
+            if ($this->matcher->match($pattern, $name)) {
                 $classmap[] = $name;
             }
         }

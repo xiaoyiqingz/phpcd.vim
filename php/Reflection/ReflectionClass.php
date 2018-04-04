@@ -4,6 +4,26 @@ namespace PHPCD\Reflection;
 
 class ReflectionClass extends \ReflectionClass
 {
+    private $matcher;
+
+    public function setMatcher(\PHPCD\Matcher\Matcher $matcher)
+    {
+        $this->matcher = $matcher;
+    }
+
+    public function getAvailableConstants($pattern)
+    {
+        $constants = $this->getConstants();
+
+        foreach ($constants as $name => $value) {
+            if (!$this->matcher->match($pattern, $name)) {
+                unset($constants[$name]);
+            }
+        }
+
+        return $constants;
+    }
+
     /**
      * Get methods available for given class
      * depending on context
@@ -12,12 +32,12 @@ class ReflectionClass extends \ReflectionClass
      * @param bool public_only restrict the result to public methods
      * @return ReflectionMethod[]
      */
-    public function getAvailableMethods($static, $public_only = false)
+    public function getAvailableMethods($static, $public_only, $pattern)
     {
         $methods = $this->getMethods();
 
         foreach ($methods as $key => $method) {
-            if (false === $this->filter($method, $static, $public_only)) {
+            if (!$this->filter($method, $static, $public_only, $pattern)) {
                 unset($methods[$key]);
             }
         }
@@ -33,12 +53,12 @@ class ReflectionClass extends \ReflectionClass
      * @param bool public_only restrict the result to public properties
      * @return ReflectionProperty[]
      */
-    public function getAvailableProperties($static, $public_only = false)
+    public function getAvailableProperties($static, $public_only, $pattern)
     {
         $properties = $this->getProperties();
 
         foreach ($properties as $key => $property) {
-            if (false === $this->filter($property, $static, $public_only)) {
+            if (!$this->filter($property, $static, $public_only, $pattern)) {
                 unset($properties[$key]);
             }
         }
@@ -46,19 +66,13 @@ class ReflectionClass extends \ReflectionClass
         return $properties;
     }
 
-    /**
-     * @param \ReflectionMethod|\ReflectionProperty $element
-     * @return bool
-     */
-    private function filter($element, $static, $public_only)
+    private function filter($element, $static, $public_only, $pattern)
     {
-        if (!$element instanceof \ReflectionMethod && !$element instanceof \ReflectionProperty) {
-            throw new \InvalidArgumentException(
-                'Parameter must be a member of ReflectionMethod or ReflectionProperty class'
-            );
+        if (!$this->matcher->match($pattern, $element->getName())) {
+            return false;
         }
 
-        if ($static !== null && ($element->isStatic() xor $static)) {
+        if ($static !== null && ($element->isStatic() || $static)) {
             return false;
         }
 
@@ -92,7 +106,7 @@ class ReflectionClass extends \ReflectionClass
         return $doc;
     }
 
-    public function getPseudoProperties()
+    public function getPseudoProperties($pattern)
     {
         $properties = [];
 
@@ -104,6 +118,10 @@ class ReflectionClass extends \ReflectionClass
             }
 
             foreach ($matches['names'] as $idx => $name) {
+                if (!$this->matcher->match($pattern, $name)) {
+                    continue;
+                }
+
                 $properties[$name] = [
                     'type' => $matches['types'][$idx],
                     'file' => $file_name,
@@ -114,7 +132,7 @@ class ReflectionClass extends \ReflectionClass
         return $properties;
     }
 
-    public function getPseudoMethods()
+    public function getPseudoMethods($pattern)
     {
         $methods = [];
 
@@ -126,6 +144,10 @@ class ReflectionClass extends \ReflectionClass
             }
 
             foreach ($matches['names'] as $idx => $name) {
+                if (!$this->matcher->match($pattern, $name)) {
+                    continue;
+                }
+
                 $methods[$name] = [
                     'file' => $file_name,
                     'type' => $matches['types'][$idx],
