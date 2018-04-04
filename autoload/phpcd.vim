@@ -46,13 +46,14 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 	try " {{{
 		let winheight = winheight(0)
 		let winnr = winnr()
-		if context =~? '^namespace'
-			return phpcd#GetPsrNamespace()
-		endif
 
-		if context =~? '\v^((abstract|final)\s+)?(class|interface|trait)'
+		if context =~? '^namespace' "{{{
+			return phpcd#GetPsrNamespace()
+		endif "}}}
+
+		if context =~? '\v^((abstract|final)\s+)?(class|interface|trait)' "{{{
 			return [expand('%:t:r')]
-		end
+		end "}}}
 
 		let [current_namespace, imports] = phpcd#GetCurrentNameSpace()
 
@@ -64,21 +65,20 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 			let classname = phpcd#GetClassName(line('.'), context, current_namespace, imports)
 
 			" TODO Fix it for variables with reference to $this etc.
-			let public_only = (context !~# '^\(\$this\|self\|static\|parent\)' )
-
+			let public_only = (context !~# '^\(\$this\|self\|static\|parent\)')
 			let is_static = 'only_nonstatic'
 
-			if strridx(context, '::') == strlen(context) - 2 " context =~ '::$'
+			if strridx(context, '::') == strlen(context) - 2 " context =~ '::$' {{{
 				if stridx(context, 'parent') != 0
 					let is_static = 'only_static'
 				else
 					let is_static = 'both'
 				endif
-			endif
+			endif" }}}
 
-			if get(g:, 'phpcd_disable_static_filter', 0)
+			if get(g:, 'phpcd_disable_static_filter', 0) "{{{
 					let is_static = 'both'
-			endif
+			endif "}}}
 
 			return rpc#request(g:phpcd_channel_id, 'info', classname, a:base, is_static, public_only)
 		elseif context =~? 'implements'
@@ -646,9 +646,9 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 	let class_candidate_imports = a:imports
 	let methodstack = phpcd#GetMethodStack(a:context) " }}}
 
-	if empty(methodstack)
+	if empty(methodstack) "{{{
 		return ''
-	endif
+	endif "}}}
 
 	if methodstack[-1] =~# '\vmake|app|get' " {{{
 		" just for laravel and container-interop
