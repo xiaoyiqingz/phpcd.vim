@@ -1,7 +1,7 @@
 function! rpc#request(...) " {{{
 	let args = a:000[:]
 
-	if args[1] == 'location'
+	if args[1] == 'location' || args[1] == 'info'
 		call add(args, expand('%:p'))
 	endif
 

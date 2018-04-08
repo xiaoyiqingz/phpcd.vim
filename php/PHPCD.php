@@ -104,11 +104,11 @@ class PHPCD implements RpcHandler
      * @var string $static_mode see translateStaticMode method
      * @var bool $public_only
      */
-    public function info($class_name, $pattern, $static_mode = 'both', $public_only = true)
+    public function info($class_name, $pattern, $static_mode, $public_only, $path)
     {
         if ($class_name) {
             $static_mode = $this->translateStaticMode($static_mode);
-            return $this->classInfo($class_name, $pattern, $static_mode, $public_only);
+            return $this->classInfo($class_name, $pattern, $static_mode, $public_only, $path);
         }
 
         if ($pattern) {
@@ -633,12 +633,19 @@ class PHPCD implements RpcHandler
         return array_keys($_);
     }
 
-    private function classInfo($class_name, $pattern, $is_static, $public_only)
+    private function classInfo($class_name, $pattern, $is_static, $public_only, $path)
     {
         $items = [];
 
         try {
-            $reflection = new \ReflectionClass($class_name);
+            if (class_exists($class_name)) {
+                $reflection = new \ReflectionClass($class_name);
+            } else {
+                $ast_locator = (new BetterReflection())->astLocator();
+                $source_locator = new SingleFileSourceLocator($path, $ast_locator);
+                $reflector = new ClassReflector($source_locator);
+                $reflection = $reflector->reflect($class_name);
+            }
 
             if (false !== $is_static) {
                 foreach ($reflection->getAvailableConstants($pattern) as $name => $value) {
