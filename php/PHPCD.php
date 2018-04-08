@@ -161,7 +161,11 @@ class PHPCD implements RpcHandler
         return $classReflection->getStartLine();
     }
 
-    private function getConstPath($const_name, \ReflectionClass $reflection)
+    /**
+     * @param string $const_name
+     * @param \ReflectionClass $reflection
+     */
+    private function getConstPath($const_name, $reflection)
     {
         $origin = $path = $reflection->getFileName();
         $origin_reflection = $reflection;
@@ -286,8 +290,8 @@ class PHPCD implements RpcHandler
     /**
      * Get the origin method reflection the inherited docComment belongs to.
      *
-     * @param $reflection_class \ReflectionClass
-     * @param $name string
+     * @param \ReflectionClass $reflection_class
+     * @param string $name
      *
      * @return \ReflectionClass
      */
@@ -686,12 +690,14 @@ class PHPCD implements RpcHandler
     {
         $items = [];
         $funcs = get_defined_functions();
+
         foreach ($funcs['internal'] as $func) {
             $info = $this->getFunctionInfo($func, $pattern);
             if ($info) {
                 $items[] = $info;
             }
         }
+
         foreach ($funcs['user'] as $func) {
             $info = $this->getFunctionInfo($func, $pattern);
             if ($info) {
@@ -762,7 +768,7 @@ class PHPCD implements RpcHandler
      * @param \ReflectionParameter $param
      * @return string
      */
-    private function formatParamInfo(\ReflectionParameter $param)
+    private function formatParamInfo($param)
     {
         /* @var ReflectionClass|null $hintedClass */
         $hintedClass = $param->getClass();
@@ -789,10 +795,10 @@ class PHPCD implements RpcHandler
     }
 
     /**
-     * @param \ReflectionMethod $param
+     * @param \ReflectionMethod $method
      * @return string
      */
-    private function getExtraMethodInfo(\ReflectionMethod $method)
+    private function getExtraMethodInfo($method)
     {
         $name = $method->getName();
         $declaringClass = $method->getDeclaringClass()->getName();
@@ -823,7 +829,10 @@ class PHPCD implements RpcHandler
         );
     }
 
-    private function getMethodInfo(\ReflectionMethod $method)
+    /**
+     * @param \ReflectionMethod $method
+     */
+    private function getMethodInfo($method)
     {
         $name = $method->getName();
 
