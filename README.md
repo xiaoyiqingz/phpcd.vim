@@ -36,7 +36,7 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
 
 ### System requirement
 
- 1. [PHP 5.6+](http://php.net/)
+ 1. ~~[PHP 5.6+](http://php.net/)~~ The master branch only support php7. If you have to use php5, please use the [php5 branch](https://github.com/lvht/phpcd.vim/tree/php5).
  2. [PCNTL](http://php.net/manual/en/book.pcntl.php) Extension
  3. [Msgpack 0.5.7+(for NeoVim)](https://github.com/msgpack/msgpack-php) Extension or [JSON(for Vim 7.4+)](http://php.net/manual/en/intro.json.php) Extension
  4. ~~[Composer](https://getcomposer.org/) Project~~
