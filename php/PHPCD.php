@@ -5,6 +5,11 @@ use Psr\Log\LoggerInterface as Logger;
 use Lvht\MsgpackRpc\Server as RpcServer;
 use Lvht\MsgpackRpc\Handler as RpcHandler;
 
+use Roave\BetterReflection\BetterReflection;
+use Roave\BetterReflection\Reflector\ClassReflector;
+use Roave\BetterReflection\Reflector\FunctionReflector;
+use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
+
 class PHPCD implements RpcHandler
 {
     private $disable_modifier;
@@ -119,14 +124,23 @@ class PHPCD implements RpcHandler
      *
      * @param string $class_name class name
      * @param string $method_name method or function name
+     * @param string $path current source file
      *
      * @return [path, line]
      */
-    public function location($class_name, $method_name = null)
+    public function location($class_name, $method_name, $path)
     {
         try {
+            $ast_locator = (new BetterReflection())->astLocator();
+            $source_locator = new SingleFileSourceLocator($path, $ast_locator);
+
             if ($class_name) {
-                $reflection = new \ReflectionClass($class_name);
+                if (class_exists($class_name)) {
+                    $reflection = new \ReflectionClass($class_name);
+                } else {
+                    $reflector = new ClassReflector($source_locator);
+                    $reflection = $reflector->reflect($class_name);
+                }
 
                 if ($reflection->hasMethod($method_name)) {
                     $reflection = $reflection->getMethod($method_name);
@@ -138,11 +152,17 @@ class PHPCD implements RpcHandler
                     return [$reflection->getFileName(), $line];
                 }
             } else {
-                $reflection = new \ReflectionFunction($method_name);
+                if (function_exists($method_name)) {
+                    $reflection = new \ReflectionFunction($method_name);
+                } else {
+                    $class_reflector = new ClassReflector($source_locator);
+                    $reflector = new FunctionReflector($source_locator, $class_reflector);
+                    $reflection = $reflector->reflect($method_name);
+                }
             }
 
             return [$reflection->getFileName(), $reflection->getStartLine()];
-        } catch (\ReflectionException $e) {
+        } catch (\Exception $e) {
             return ['', null];
         }
     }

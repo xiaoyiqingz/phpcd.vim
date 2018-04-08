@@ -1,9 +1,15 @@
 function! rpc#request(...) " {{{
+	let args = a:000[:]
+
+	if args[1] == 'location'
+		call add(args, expand('%:p'))
+	endif
+
 	if has('nvim')
-		return call('rpcrequest', a:000)
+		return call('rpcrequest', args)
 	else
-		let channel = job_getchannel(a:1)
-		let request = [0, 1, a:2, a:000[2:]]
+		let channel = job_getchannel(args[0])
+		let request = [0, 1, args[1], args[2:]]
 		let [type, msgid, error, response] = json_decode(ch_evalraw(channel, json_encode(request)."\n"))
 		if error
 			throw error
