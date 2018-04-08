@@ -10,6 +10,8 @@ class ClassNameExVisitor extends NodeVisitorAbstract
     public $namespace;
     public $imports = [];
     public $name;
+    public $start_line;
+    public $end_line;
 
     public function enterNode(Node $node)
     {
@@ -43,6 +45,8 @@ class ClassNameExVisitor extends NodeVisitorAbstract
 
         if ($node instanceof Node\Stmt\ClassLike) {
             $this->name = $node->name;
+            $this->start_line = $node->getLine();
+            $this->end_line = $node->getAttribute('endLine');
 
             return NodeTraverser::STOP_TRAVERSAL;
         }

@@ -135,12 +135,7 @@ class PHPCD implements RpcHandler
             $source_locator = new SingleFileSourceLocator($path, $ast_locator);
 
             if ($class_name) {
-                if (class_exists($class_name)) {
-                    $reflection = new \ReflectionClass($class_name);
-                } else {
-                    $reflector = new ClassReflector($source_locator);
-                    $reflection = $reflector->reflect($class_name);
-                }
+                $reflection = $this->reflectClass($class_name, $path);
 
                 if ($reflection->hasMethod($method_name)) {
                     $reflection = $reflection->getMethod($method_name);
@@ -152,13 +147,7 @@ class PHPCD implements RpcHandler
                     return [$reflection->getFileName(), $line];
                 }
             } else {
-                if (function_exists($method_name)) {
-                    $reflection = new \ReflectionFunction($method_name);
-                } else {
-                    $class_reflector = new ClassReflector($source_locator);
-                    $reflector = new FunctionReflector($source_locator, $class_reflector);
-                    $reflection = $reflector->reflect($method_name);
-                }
+                $reflection = $this->reflectFunction($name, $path);
             }
 
             return [$reflection->getFileName(), $reflection->getStartLine()];
@@ -224,9 +213,9 @@ class PHPCD implements RpcHandler
                 return $this->docFunction($name, $path);
             }
 
-            return $this->docClass($class_name, $name, $is_method);
+            return $this->docClass($class_name, $name, $is_method, $path);
         } catch (\ReflectionException $e) {
-            $this->logger->debug($e->getMessage());
+            $this->logger->debug((string) $e);
             return [null, null];
         }
     }
@@ -245,16 +234,17 @@ class PHPCD implements RpcHandler
             $name = $_name;
         }
 
-        $reflection = new \ReflectionFunction($name);
+        $reflection = $this->reflectFunction($name, $path);
+
         $doc = $reflection->getDocComment();
         $path = $reflection->getFileName();
 
         return [$path, $this->clearDoc($doc)];
     }
 
-    private function docClass($class_name, $name, $is_method)
+    private function docClass($class_name, $name, $is_method, $path)
     {
-        $reflection_class = new Reflection\ReflectionClass($class_name);
+        $reflection_class = $this->reflectClass($class_name, $path);
         $reflection = null;
 
         if ($is_method) {
@@ -350,6 +340,8 @@ class PHPCD implements RpcHandler
      *     'alias1' => 'fqdn1',
      *   ],
      *   'class' => '',
+     *   'start_line' => 1,
+     *   'end_line' => 5,
      * ]
      */
     public function nsuse($path)
@@ -399,7 +391,7 @@ class PHPCD implements RpcHandler
             }
         }
 
-        list($path, $doc) = $this->doc($class_name, $name, $path);
+        list($path, $doc) = $this->doc($class_name, $name, true, $path);
         return $this->typeByDoc($path, $doc);
     }
 
@@ -419,7 +411,7 @@ class PHPCD implements RpcHandler
             return ["\\".$type];
         }
 
-        list($path, $doc) = $this->doc($class_name, $func_name, $path);
+        list($path, $doc) = $this->doc($class_name, $func_name, true, $path);
         return $this->argTypeByDoc($path, $doc, $name);
     }
 
@@ -427,24 +419,24 @@ class PHPCD implements RpcHandler
     {
         try {
             if ($class_name) {
-                $reflection = new \ReflectionClass($class_name);
+                $reflection = $this->reflectClass($class_name, $path);
                 $reflection = $reflection->getMethod($func_name);
             } else {
                 $nsuse = $this->nsuse($path);
 
-                if (isset($nsuse['alias'][$name])) {
-                    $_name = $nsuse['alias'][$name];
+                if (isset($nsuse['alias'][$func_name])) {
+                    $_name = $nsuse['alias'][$func_name];
                     if (function_exists($_name)) {
-                        $name = $_name;
+                        $func_name = $_name;
                     }
                 } else {
                     $_name = $nsuse['namespace'].'\\'.$func_name;
                     if (function_exists($_name)) {
-                        $name = $_name;
+                        $func_name = $_name;
                     }
                 }
 
-                $reflection = new \ReflectionFunction($name);
+                $reflection = $this->reflectFunction($func_name, $path);
             }
 
             /** @var \ReflectionMethod $reflection */
@@ -463,7 +455,6 @@ class PHPCD implements RpcHandler
     {
         $has_doc = preg_match('/@param\s+(\S+)\s+\$'.$name.'/m', $doc, $matches);
         if ($has_doc) {
-            $this->logger->debug('m', $matches);
             return $this->fixRelativeType($path, explode('|', $matches[1]));
         }
 
@@ -475,9 +466,9 @@ class PHPCD implements RpcHandler
      *
      * @return [type1, type2, ...]
      */
-    public function proptype($class_name, $name)
+    public function proptype($class_name, $name, $path)
     {
-        list($path, $doc) = $this->doc($class_name, $name, false);
+        list($path, $doc) = $this->doc($class_name, $name, false, $path);
         $types = $this->typeByDoc($path, $doc);
 
         if (!$types) {
@@ -542,7 +533,7 @@ class PHPCD implements RpcHandler
     {
         try {
             if ($class_name) {
-                $reflection = new \ReflectionClass($class_name);
+                $reflection = $this->reflectClass($class_name, $path);
                 $reflection = $reflection->getMethod($name);
             } else {
                 $nsuse = $this->nsuse($path);
@@ -559,7 +550,7 @@ class PHPCD implements RpcHandler
                     }
                 }
 
-                $reflection = new \ReflectionFunction($name);
+                $reflection = $this->reflectFunction($name, $path);
             }
             $type = (string) $reflection->getReturnType();
 
@@ -633,19 +624,41 @@ class PHPCD implements RpcHandler
         return array_keys($_);
     }
 
+    private function reflectFunction($name, $path)
+    {
+        if (function_exists($name)) {
+            $reflection = new \ReflectionFunction($name);
+        } else {
+            $ast_locator = (new BetterReflection())->astLocator();
+            $source_locator = new SingleFileSourceLocator($path, $ast_locator);
+            $class_reflector = new ClassReflector($source_locator);
+            $reflector = new FunctionReflector($source_locator, $class_reflector);
+            $reflection = $reflector->reflect($name);
+        }
+
+        return $reflection;
+    }
+
+    private function reflectClass($class_name, $path)
+    {
+        if (class_exists($class_name)) {
+            $reflection = new \ReflectionClass($class_name);
+        } else {
+            $ast_locator = (new BetterReflection())->astLocator();
+            $source_locator = new SingleFileSourceLocator($path, $ast_locator);
+            $reflector = new ClassReflector($source_locator);
+            $reflection = $reflector->reflect($class_name);
+        }
+
+        return $reflection;
+    }
+
     private function classInfo($class_name, $pattern, $is_static, $public_only, $path)
     {
         $items = [];
 
         try {
-            if (class_exists($class_name)) {
-                $reflection = new \ReflectionClass($class_name);
-            } else {
-                $ast_locator = (new BetterReflection())->astLocator();
-                $source_locator = new SingleFileSourceLocator($path, $ast_locator);
-                $reflector = new ClassReflector($source_locator);
-                $reflection = $reflector->reflect($class_name);
-            }
+            $reflection = $this->reflectClass($class_name, $path);
 
             if (false !== $is_static) {
                 foreach ($reflection->getAvailableConstants($pattern) as $name => $value) {
@@ -706,7 +719,7 @@ class PHPCD implements RpcHandler
 
             return $items;
         } catch (\ReflectionException $e) {
-            $this->logger->debug($e->getMessage());
+            $this->logger->debug((string) $e);
         }
 
         return $items;

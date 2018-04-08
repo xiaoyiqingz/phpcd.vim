@@ -292,7 +292,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 		if a:symbol =~ '\v\C^[A-Z]'
 			let [classname, namespace] = phpcd#ExpandClassName(a:symbol, a:symbol_namespace, a:current_imports)
 			let full_classname = s:GetFullName(namespace, classname)
-			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname)
+			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, '')
 		else
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
 			if path == ''
@@ -559,7 +559,7 @@ function! phpcd#GetCallChainReturnType(classname_candidate, class_candidate_name
 		let return_types = rpc#request(g:phpcd_channel_id, 'functype', full_classname, method, expand('%:p'))
 	else
 		let prop = matchstr(methodstack[0], '\v^\$*\zs[^[(]+\ze')
-		let return_types = rpc#request(g:phpcd_channel_id, 'proptype', full_classname, prop)
+		let return_types = rpc#request(g:phpcd_channel_id, 'proptype', full_classname, prop, expand('%:p'))
 	endif
 
 	if len(return_types) > 0
@@ -816,7 +816,14 @@ function! phpcd#GetClassName(start_line, context, current_namespace, imports) " 
 			" function declaration line
 			if line =~? 'function\s\+'.function_name_pattern.'\s*(.\{-\}\s*'.object " {{{
 				let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
-				let classname = nsuse.namespace.'\'.nsuse.class
+
+				let line_no = a:start_line - i
+				if line_no > nsuse.start_line && line_no < nsuse.end_line
+					let classname = nsuse.namespace.'\'.nsuse.class
+				else
+					let classname = ''
+				endif
+
 				let funcname = matchstr(line, '\cfunction\s\+\zs'.function_name_pattern.'\ze')
 				let argtypes = rpc#request(g:phpcd_channel_id, 'argtype', classname, funcname, object, expand('%:p'))
 
