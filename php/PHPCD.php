@@ -638,8 +638,7 @@ class PHPCD implements RpcHandler
         $items = [];
 
         try {
-            $reflection = new Reflection\ReflectionClass($class_name);
-            $reflection->setMatcher($this->matcher);
+            $reflection = new \ReflectionClass($class_name);
 
             if (false !== $is_static) {
                 foreach ($reflection->getAvailableConstants($pattern) as $name => $value) {
@@ -658,19 +657,19 @@ class PHPCD implements RpcHandler
                 }
             }
 
-            $methods = $reflection->getAvailableMethods($is_static, $public_only, $pattern);
+            $methods = $this->getAvailableMethods($reflection, $is_static, $public_only, $pattern);
 
             foreach ($methods as $method) {
                 $items[] = $this->getMethodInfo($method);
             }
 
-            $properties = $reflection->getAvailableProperties($is_static, $public_only, $pattern);
+            $properties = $this->getAvailableProperties($reflection, $is_static, $public_only, $pattern);
 
             foreach ($properties as $property) {
                 $items[] = $this->getPropertyInfo($property);
             }
 
-            $pseudo_methods = $reflection->getPseudoMethods($pattern);
+            $pseudo_methods = $this->getPseudoMethods($reflection, $pattern);
             foreach ($pseudo_methods as $name => $info) {
                 if ($this->disable_modifier) {
                     $abbr = sprintf("%s(%s)", $name,  $info['params']);
@@ -687,7 +686,7 @@ class PHPCD implements RpcHandler
                 ];
             }
 
-            $pseudo_properties = $reflection->getPseudoProperties($pattern);
+            $pseudo_properties = $this->getPseudoProperties($reflection, $pattern);
             foreach ($pseudo_properties as $name => $info) {
                 $items[] = [
                     'word' => $name,
@@ -1004,5 +1003,167 @@ class PHPCD implements RpcHandler
                 'icase' => 1,
             ];
         }, array_unique($classmap));
+    }
+
+    /**
+     * @param \ReflectionClass $reflection
+     * @param string $pattern
+     */
+    private function getAvailableConstants($reflection, $pattern)
+    {
+        $constants = $reflection->getConstants();
+
+        foreach ($constants as $name => $value) {
+            if (!$this->matcher->match($pattern, $name)) {
+                unset($constants[$name]);
+            }
+        }
+
+        return $constants;
+    }
+
+    /**
+     * Get methods available for given class
+     * depending on context
+     *
+     * @param \ReflectionClass $reflection
+     * @param bool|null $static Show static|non static|both types
+     * @param bool public_only restrict the result to public methods
+     * @return \ReflectionMethod[]
+     */
+    private function getAvailableMethods($reflection, $static, $public_only, $pattern)
+    {
+        $methods = $reflection->getMethods();
+
+        foreach ($methods as $key => $method) {
+            if (!$this->filter($reflection, $method, $static, $public_only, $pattern)) {
+                unset($methods[$key]);
+            }
+        }
+
+        return $methods;
+    }
+
+    /**
+     * Get properties available for given class
+     * depending on context
+     *
+     * @param \ReflectionClass $reflection
+     * @param bool|null $static Show static|non static|both types
+     * @param bool public_only restrict the result to public properties
+     * @return \ReflectionProperty[]
+     */
+    private function getAvailableProperties($reflection, $static, $public_only, $pattern)
+    {
+        $properties = $reflection->getProperties();
+
+        foreach ($properties as $key => $property) {
+            if (!$this->filter($reflection, $property, $static, $public_only, $pattern)) {
+                unset($properties[$key]);
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * @param \ReflectionClass $reflection
+     */
+    private function getPseudoProperties($reflection, $pattern)
+    {
+        $properties = [];
+
+        foreach ($this->getAllClassDocComments($reflection) as $file_name => $doc) {
+            $has_doc = preg_match_all('/@property(|-read|-write)\s+(?<types>\S+)\s+\$?(?<names>[a-zA-Z0-9_$]+)/mi', $doc, $matches);
+
+            if (!$has_doc) {
+                continue;
+            }
+
+            foreach ($matches['names'] as $idx => $name) {
+                if (!$this->matcher->match($pattern, $name)) {
+                    continue;
+                }
+
+                $properties[$name] = [
+                    'type' => $matches['types'][$idx],
+                    'file' => $file_name,
+                ];
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * @param \ReflectionClass $reflection
+     */
+    private function getPseudoMethods($reflection, $pattern)
+    {
+        $methods = [];
+
+        foreach ($this->getAllClassDocComments($reflection) as $file_name => $doc) {
+            $has_doc = preg_match_all('/@method\s+(?<statics>static)?\s*(?<types>\S+)\s+(?<names>[a-zA-Z0-9_$]+)\((?<params>.*)\)/mi', $doc, $matches);
+
+            if (!$has_doc) {
+                continue;
+            }
+
+            foreach ($matches['names'] as $idx => $name) {
+                if (!$this->matcher->match($pattern, $name)) {
+                    continue;
+                }
+
+                $methods[$name] = [
+                    'file' => $file_name,
+                    'type' => $matches['types'][$idx],
+                    'params' => $matches['params'][$idx],
+                ];
+            }
+        }
+
+        return $methods;
+    }
+
+    /**
+     * @param \ReflectionClass $reflection
+     */
+    private function getAllClassDocComments($reflection)
+    {
+        $doc = [];
+
+        do {
+            $file_name = $reflection->getFileName();
+            $doc[$file_name] = $reflection->getDocComment();
+            $reflection = $reflection->getParentClass();
+        } while ($reflection); // gets the parents properties too
+
+        return $doc;
+    }
+
+    private function filter($reflection, $element, $static, $public_only, $pattern)
+    {
+        if (!$this->matcher->match($pattern, $element->getName())) {
+            return false;
+        }
+
+        if ($static !== null && ($element->isStatic() || $static)) {
+            return false;
+        }
+
+        if ($element->isPublic()) {
+            return true;
+        }
+
+        if ($public_only) {
+            return false;
+        }
+
+        if ($element->isProtected()) {
+            return true;
+        }
+
+        // $element is then private
+        return $element->getDeclaringClass()->getName() === $reflection->getName();
     }
 }
