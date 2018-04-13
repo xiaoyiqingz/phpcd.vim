@@ -661,7 +661,7 @@ class PHPCD implements RpcHandler
             $reflection = $this->reflectClass($class_name, $path);
 
             if (false !== $is_static) {
-                foreach ($reflection->getAvailableConstants($pattern) as $name => $value) {
+                foreach ($this->getAvailableConstants($reflection, $pattern) as $name => $value) {
                     {
                         if (is_array($value)) {
                             $value = '[...]';
