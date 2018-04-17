@@ -20,7 +20,7 @@ PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomp
      - Recognize `/* @var $yourvar YourClass */`、 `/* @var YourClass $yourvar */` type mark comments
      - Recognize `$instance = new Class;` class instantiations
      - Recognize `(new Class)->` class instantiations
-     - ~~Recognize `$date = DateTime::createFromFormat(...)` built-in class return types~~
+     - Recognize `$date = DateTime::createFromFormat(...)` built-in class return types
      - Recognize both parameter type hinting and return hinting in function prototypes
      - Recognize types in `@param` lines in function docblocks
      - Recognize types in `@return` lines in function docblocks

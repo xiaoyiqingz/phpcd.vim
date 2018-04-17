@@ -384,6 +384,14 @@ class PHPCD implements RpcHandler
      */
     public function functype($class_name, $name, $path)
     {
+        $method = $class_name ? "$class_name::$name" : $name;
+        $method = trim($method, '\\');
+        $method_return = require __DIR__.'/method_return.php';
+
+        if (isset($method_return[$method])) {
+            return [$method_return[$method]];
+        }
+
         if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
             $type = $this->typeByReturnType($class_name, $name, $path);
             if ($type) {
