@@ -878,14 +878,12 @@ class PHPCD implements RpcHandler
         }
         $docblock = $this->clearDoc($method->getDocComment());
         return sprintf(
-            "%s %s%s%s(\n%s)%s\n%s",
+            "%s %s%s%s(%s)%s%s",
             $visibility,
             $declaringClass,
             $accessMode,
             $name,
-            count($paramsInfo)
-                ? '    ' . join(",\n    ", $paramsInfo) . "\n"
-                : '',
+            join(", ", $paramsInfo),
             $returnType,
             $docblock
         );
