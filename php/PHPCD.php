@@ -777,12 +777,20 @@ class PHPCD implements RpcHandler
                 continue;
             }
 
-            $items[] = [
+            $reflection = new \ReflectionClass($name);
+
+            $item = [
                 'word' => $name,
                 'abbr' => "© $name",
-                'kind' => 'c',
+                'kind' => 'f',
                 'icase' => 0,
             ];
+
+            if ($method = $reflection->getConstructor()) {
+                $item['info'] = $this->getExtraMethodInfo($method);
+            }
+
+            $items[] = $item;
         }
 
         return $items;
