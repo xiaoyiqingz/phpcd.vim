@@ -1202,8 +1202,10 @@ class PHPCD implements RpcHandler
             return false;
         }
 
-        if ($static !== null && ($element->isStatic() || $static)) {
-            return false;
+        if ($static !== null) {
+            if ($static != $element->isStatic()) {
+                return false;
+            }
         }
 
         if ($element->isPublic()) {
