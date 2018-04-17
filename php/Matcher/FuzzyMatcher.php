@@ -16,7 +16,7 @@ class FuzzyMatcher implements Matcher
             $parts[] = $char;
             $parts[] = '.*';
         }
-        $parts[] = '/';
+        $parts[] = '/i';
 
         $pattern = implode($parts);
 
