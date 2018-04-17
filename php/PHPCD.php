@@ -751,6 +751,10 @@ class PHPCD implements RpcHandler
     {
         $items = [];
         foreach (get_defined_constants() as $name => $value) {
+            if (!$this->matcher->match($pattern, $name)) {
+                continue;
+            }
+
             if (is_array($value)) {
                 $value = '[...]';
             }
@@ -975,18 +979,24 @@ class PHPCD implements RpcHandler
         return $namespaces;
     }
 
-    public function keyword()
+    public function keyword($pattern)
     {
         $keywords = require __DIR__.'/keyword.php';
-        return array_map(function ($keyword) {
-            return [
-                'word' => $keyword,
-                'abbr' => $keyword,
-                'info' => '',
-                'kind' => 'd',
-                'icase' => 1,
-            ];
-        }, $keywords);
+
+        $items = [];
+        foreach ($keywords as $keyword) {
+            if ($this->matcher->match($pattern, $keyword)) {
+                $items[] = [
+                    'word' => $keyword,
+                    'abbr' => $keyword,
+                    'info' => '',
+                    'kind' => 'd',
+                    'icase' => 1,
+                ];
+            }
+        }
+
+        return $items;
     }
 
     public function classmap($pattern)
