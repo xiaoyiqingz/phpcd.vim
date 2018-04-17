@@ -769,6 +769,25 @@ class PHPCD implements RpcHandler
         return $items;
     }
 
+    public function classes($pattern)
+    {
+        $items = [];
+        foreach (get_declared_classes() as $name) {
+            if (!$this->matcher->match($pattern, $name)) {
+                continue;
+            }
+
+            $items[] = [
+                'word' => $name,
+                'abbr' => "© $name",
+                'kind' => 'c',
+                'icase' => 0,
+            ];
+        }
+
+        return $items;
+    }
+
     private function getFunctionInfo($name, $pattern)
     {
         if (!$this->matcher->match($pattern, $name)) {

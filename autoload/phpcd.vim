@@ -22,6 +22,10 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		let b:phpbegin = phpbegin
 		let b:compl_context = phpcd#GetCurrentInstruction(line('.'), max([0, col('.') - 2]), phpbegin)
 
+		if b:compl_context =~ 'new\s\+\\'
+			let start = start + 1
+		endif
+
 		return start
 	endif " }}}
 
@@ -91,8 +95,8 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 			" special case when you've typed the class keyword and the name too,
 			" only extends and implements allowed there
 			return filter(['extends', 'implements'], 'stridx(v:val, a:base) == 0')
-		elseif context =~? 'new'
-			" TODO complete $foo = new
+		elseif context =~? 'new\s\+\\'
+			return rpc#request(g:phpcd_channel_id, 'classes', a:base)
 		endif " }}}
 
 		if a:base =~ '^[^$]' " {{{
