@@ -37,6 +37,10 @@ class ClassNameExVisitor extends NodeVisitorAbstract
             foreach ($node->uses as $use) {
                 $alias = $use->alias;
 
+                if (!$alias) {
+                    $alias = end($use->name->parts);
+                }
+
                 if ($use->type !== Node\Stmt\Use_::TYPE_CONSTANT) {
                     $this->imports[$alias] = (string)$use->name;
                 }
