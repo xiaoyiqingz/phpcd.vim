@@ -251,7 +251,7 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasMethod($name)) {
                 $reflection = $reflection_class->getMethod($name);
             } else {
-                $methods = $reflection_class->getPseudoMethods($name);
+                $methods = $this->getPseudoMethods($reflection_class, $name);
 
                 if (!isset($methods[$name])) {
                     return ['', ''];
