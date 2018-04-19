@@ -9,6 +9,9 @@ use Roave\BetterReflection\BetterReflection;
 use Roave\BetterReflection\Reflector\ClassReflector;
 use Roave\BetterReflection\Reflector\FunctionReflector;
 use Roave\BetterReflection\SourceLocator\Type\SingleFileSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\PhpInternalSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\AutoloadSourceLocator;
+use Roave\BetterReflection\SourceLocator\Type\AggregateSourceLocator;
 
 class PHPCD implements RpcHandler
 {
@@ -131,9 +134,6 @@ class PHPCD implements RpcHandler
     public function location($class_name, $method_name, $path)
     {
         try {
-            $ast_locator = (new BetterReflection())->astLocator();
-            $source_locator = new SingleFileSourceLocator($path, $ast_locator);
-
             if ($class_name) {
                 $reflection = $this->reflectClass($class_name, $path);
 
@@ -466,24 +466,24 @@ class PHPCD implements RpcHandler
         $types = $this->typeByDoc($path, $doc);
 
         if (!$types) {
-            $types = $this->proptypeByMethod($class_name, $name, '__construct');
+            $types = $this->proptypeByMethod($class_name, $name, '__construct', $path);
         }
 
         if (!$types) {
             $setter = 'set'.ucfirst($name);
-            $types = $this->proptypeByMethod($class_name, $name, $setter);
+            $types = $this->proptypeByMethod($class_name, $name, $setter, $path);
         }
 
         return $types;
     }
 
-    private function proptypeByMethod($class_name, $name, $method)
+    private function proptypeByMethod($class_name, $name, $method, $path)
     {
-        if (!class_exists($class_name, true)) {
+        try {
+            $reflection = $this->reflectClass($class_name, $path);
+        } catch (\Exception $e) {
             return [];
         }
-
-        $reflection = new \ReflectionClass($class_name);
 
         if (!$reflection->hasMethod($method)) {
             return [];
@@ -640,7 +640,11 @@ class PHPCD implements RpcHandler
         } else {
             $ast_locator = (new BetterReflection())->astLocator();
             $source_locator = new SingleFileSourceLocator($path, $ast_locator);
-            $reflector = new ClassReflector($source_locator);
+            $internal_locator = new PhpInternalSourceLocator($ast_locator);
+            $autoload_locator = new AutoloadSourceLocator($ast_locator);
+            $locator = new AggregateSourceLocator([$source_locator, $autoload_locator, $internal_locator]);
+            $reflector = new ClassReflector($locator);
+
             $reflection = $reflector->reflect($class_name);
         }
 
