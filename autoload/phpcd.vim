@@ -298,10 +298,7 @@ function! phpcd#LocateSymbol(symbol, symbol_context, symbol_namespace, current_i
 			let full_classname = s:GetFullName(namespace, classname)
 			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', full_classname, '')
 		else
-			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol_namespace.'\'.a:symbol)
-			if path == ''
-				let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol)
-			endif
+			let [path, line] = rpc#request(g:phpcd_channel_id, 'location', '', a:symbol)
 		end
 
 		return [path, line, 0]

@@ -147,7 +147,7 @@ class PHPCD implements RpcHandler
                     return [$reflection->getFileName(), $line];
                 }
             } else {
-                $reflection = $this->reflectFunction($name, $path);
+                $reflection = $this->reflectFunction($method_name, $path);
             }
 
             return [$reflection->getFileName(), $reflection->getStartLine()];
@@ -430,20 +430,6 @@ class PHPCD implements RpcHandler
                 $reflection = $this->reflectClass($class_name, $path);
                 $reflection = $reflection->getMethod($func_name);
             } else {
-                $nsuse = $this->nsuse($path);
-
-                if (isset($nsuse['alias'][$func_name])) {
-                    $_name = $nsuse['alias'][$func_name];
-                    if (function_exists($_name)) {
-                        $func_name = $_name;
-                    }
-                } else {
-                    $_name = $nsuse['namespace'].'\\'.$func_name;
-                    if (function_exists($_name)) {
-                        $func_name = $_name;
-                    }
-                }
-
                 $reflection = $this->reflectFunction($func_name, $path);
             }
 
@@ -544,20 +530,6 @@ class PHPCD implements RpcHandler
                 $reflection = $this->reflectClass($class_name, $path);
                 $reflection = $reflection->getMethod($name);
             } else {
-                $nsuse = $this->nsuse($path);
-
-                if (isset($nsuse['alias'][$name])) {
-                    $_name = $nsuse['alias'][$name];
-                    if (function_exists($_name)) {
-                        $name = $_name;
-                    }
-                } else {
-                    $_name = $nsuse['namespace'].'\\'.$name;
-                    if (function_exists($_name)) {
-                        $name = $_name;
-                    }
-                }
-
                 $reflection = $this->reflectFunction($name, $path);
             }
             $type = (string) $reflection->getReturnType();
@@ -634,6 +606,20 @@ class PHPCD implements RpcHandler
 
     private function reflectFunction($name, $path)
     {
+        $nsuse = $this->nsuse($path);
+
+        if (isset($nsuse['alias'][$name])) {
+            $_name = $nsuse['alias'][$name];
+            if (function_exists($_name)) {
+                $name = $_name;
+            }
+        } else {
+            $_name = $nsuse['namespace'].'\\'.$name;
+            if (function_exists($_name)) {
+                $name = $_name;
+            }
+        }
+
         if (function_exists($name)) {
             $reflection = new \ReflectionFunction($name);
         } else {
