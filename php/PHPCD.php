@@ -265,7 +265,7 @@ class PHPCD implements RpcHandler
             if ($reflection_class->hasProperty($name)) {
                 $reflection = $reflection_class->getProperty($name);
             } else {
-                $properties = $reflection_class->getPseudoProperties($name);
+                $properties = $this->getPseudoProperties($reflection_class, $name);
 
                 if (!isset($properties[$name])) {
                     return ['', ''];
