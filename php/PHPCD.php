@@ -214,7 +214,7 @@ class PHPCD implements RpcHandler
             }
 
             return $this->docClass($class_name, $name, $is_method, $path);
-        } catch (\ReflectionException $e) {
+        } catch (\Exception $e) {
             $this->logger->debug((string) $e);
             return [null, null];
         }
@@ -440,7 +440,7 @@ class PHPCD implements RpcHandler
                     return $parameter->getType();
                 }
             }
-        } catch (\ReflectionException $e) {
+        } catch (\Exception $e) {
             $this->logger->debug((string) $e);
         }
     }
@@ -539,7 +539,7 @@ class PHPCD implements RpcHandler
             }
 
             return $type;
-        } catch (\ReflectionException $e) {
+        } catch (\Exception $e) {
             $this->logger->debug((string) $e);
         }
     }
@@ -716,7 +716,7 @@ class PHPCD implements RpcHandler
             }
 
             return $items;
-        } catch (\ReflectionException $e) {
+        } catch (\Exception $e) {
             $this->logger->debug((string) $e);
         }
 
