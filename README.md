@@ -10,7 +10,7 @@ PHPCD is based on [phpcomplete.vim](https://github.com/shawncplus/phpcomplete.vi
 
 While phpcomplete.vim uses the tags file to fetch the context info, PHPCD uses PHP's Reflection mechanism to fetch the context info, and this is why PHPCD is faster. All the phpcomplete VimL code related the tags file has been droped and reimplemented.
 
-PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. ~~The communication between the VimL part and the PHP part relies on NeoVim's MsgPack-RPC mechanism. This is why NeoVim is needed.~~ Both NeoVim and Vim 8.0+ are supported now. Thanks to NoeVims's MsgPack-RPC and Vim's Channel/Job mechanism.
+PHPCD consists of two parts. On part is written in VimL (mainly based on phpcomplete.vim), and the other in PHP. ~~The communication between the VimL part and the PHP part relies on NeoVim's MsgPack-RPC mechanism. This is why NeoVim is needed.~~ Both NeoVim and Vim 8.0+ are supported now. Thanks to NeoVims's MsgPack-RPC and Vim's Channel/Job mechanism.
 
 ##  Feature
  * Fast, Lightweight, Powerful, Smart
