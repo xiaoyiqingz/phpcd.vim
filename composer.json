@@ -14,8 +14,7 @@
         "lvht/msgpack-rpc": "^0.2.1",
         "monolog/monolog": "^1.20",
         "ext-json": "*",
-        "nikic/PHP-Parser": "^3.1",
-        "roave/better-reflection": "^2.0"
+        "roave/better-reflection": "^3.0"
     },
     "config": {
       "classmap-authoritative": true
