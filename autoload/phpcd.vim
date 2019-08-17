@@ -910,7 +910,7 @@ function! phpcd#UpdateIndex() " {{{
 	let g:phpcd_need_update = 0
 	let nsuse = rpc#request(g:phpcd_channel_id, 'nsuse', expand('%:p'))
 
-	if !nsuse.class
+	if nsuse.class == ""
 		return
 	endif
 

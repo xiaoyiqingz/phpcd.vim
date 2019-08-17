@@ -44,10 +44,10 @@ class PHPID implements RpcHandler
 
     private function _update($class_name, $parents, $interfaces)
     {
-        foreach ($parents as $parent) {
+        foreach ((array)$parents as $parent) {
             $this->updateParentIndex($parent, $class_name);
         }
-        foreach ($interfaces as $interface) {
+        foreach ((array)$interfaces as $interface) {
             $this->updateInterfaceIndex($interface, $class_name);
         }
     }
