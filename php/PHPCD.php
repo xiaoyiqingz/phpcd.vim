@@ -416,7 +416,7 @@ class PHPCD implements RpcHandler
 
         $type = $this->argTypeByHint($class_name, $func_name, $name, $path);
         if ($type && !$type->isBuiltin()) {
-            return ["\\".$type];
+            return ["\\".$type->getName()];
         }
 
         list($path, $doc) = $this->doc($class_name, $func_name, true, $path);
@@ -513,7 +513,7 @@ class PHPCD implements RpcHandler
                 /** @var \ReflectionParameter $parameter */
                 foreach ($constructor->getParameters() as $parameter) {
                     if ($parameter->getName() === $value_name) {
-                        $value_type = (string) $parameter->getType();
+                        $value_type = $parameter->getType()->getName();
                         return [$value_type];
                     }
                 }
@@ -532,7 +532,7 @@ class PHPCD implements RpcHandler
             } else {
                 $reflection = $this->reflectFunction($name, $path);
             }
-            $type = (string) $reflection->getReturnType();
+            $type = $reflection->getReturnType()->getName();
 
             if (strtolower($type) == 'self') {
                 $type = $class_name;
@@ -879,7 +879,7 @@ class PHPCD implements RpcHandler
         }
         $returnType = '';
         if (method_exists($method, 'getReturnType') && $method->hasReturnType()) {
-            $returnType = " : " . (string)$method->getReturnType();
+            $returnType = " : " . $method->getReturnType()->getName();
         }
         $docblock = $this->clearDoc($method->getDocComment());
         return sprintf(
