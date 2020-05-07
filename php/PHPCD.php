@@ -462,6 +462,22 @@ class PHPCD implements RpcHandler
      */
     public function proptype($class_name, $name, $path)
     {
+        if (PHP_VERSION_ID > 70400) {
+            try {
+                $reflection = $this->reflectClass($class_name, $path);
+                if ($reflection->hasProperty($name)) {
+                    $t = $reflection->getProperty($name)->getType();
+                    if ($t != null) {
+                        $this->logger->debug((string)$t);
+                        return $this->fixRelativeType($path, [(string)$t]);
+                    }
+                }
+            } catch (\Exception $e) {
+                $this->logger->debug((string) $e);
+                return [];
+            }
+        }
+
         list($path, $doc) = $this->doc($class_name, $name, false, $path);
         $types = $this->typeByDoc($path, $doc);
 
