@@ -636,7 +636,7 @@ class PHPCD implements RpcHandler
             }
         }
 
-        if (function_exists($name)) {
+        if (function_exists($name) || interface_exists($name)) {
             $reflection = new \ReflectionFunction($name);
         } else {
             $ast_locator = (new BetterReflection())->astLocator();
