@@ -51,6 +51,8 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 		let winheight = winheight(0)
 		let winnr = winnr()
 
+		let context = substitute(context, "\\s*->\\s*", "->", "")
+
 		if context =~? '^namespace' "{{{
 			return phpcd#GetPsrNamespace()
 		endif "}}}
