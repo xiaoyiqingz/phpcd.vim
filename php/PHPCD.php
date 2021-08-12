@@ -1002,7 +1002,7 @@ class PHPCD implements RpcHandler
         foreach ($list as $namespace => $paths) {
             foreach ((array)$paths as $path) {
                 $path = realpath($this->root.'/'.$path);
-                if (strpos($dir, $path) === 0) {
+                if ($path && strpos($dir, $path) === 0) {
                     $sub_path = str_replace($path, '', $dir);
                     $sub_path = str_replace('/', '\\', $sub_path);
                     $sub_namespace = trim($sub_path, '\\');
