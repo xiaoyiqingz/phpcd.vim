@@ -55,7 +55,7 @@ function! phpcd#CompletePHP(findstart, base) " {{{
 			return phpcd#GetPsrNamespace()
 		endif "}}}
 
-		if context =~? '\v^((abstract|final)\s+)?(class|interface|trait)' "{{{
+		if context =~? '\v^((abstract|final)\s+)?(class|interface|trait)\s*$' "{{{
 			return [expand('%:t:r')]
 		end "}}}
 
