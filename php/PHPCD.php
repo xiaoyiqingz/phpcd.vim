@@ -468,8 +468,9 @@ class PHPCD implements RpcHandler
                 if ($reflection->hasProperty($name)) {
                     $t = $reflection->getProperty($name)->getType();
                     if ($t != null) {
-                        $this->logger->debug((string)$t);
-                        return $this->fixRelativeType($path, [(string)$t]);
+			$name = $t->getName();
+                        $this->logger->debug($name);
+                        return $this->fixRelativeType($path, [$name]);
                     }
                 }
             } catch (\Exception $e) {
