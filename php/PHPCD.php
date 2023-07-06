@@ -549,7 +549,12 @@ class PHPCD implements RpcHandler
             } else {
                 $reflection = $this->reflectFunction($name, $path);
             }
-            $type = $reflection->getReturnType()->getName();
+
+            if ($reflection instanceof \Roave\BetterReflection\Reflection\ReflectionMethod) {
+                $type = (string)($reflection->getReturnType());
+            } else {
+                $type = $reflection->getReturnType()->getName();
+            }
 
             if (strtolower($type) == 'self') {
                 $type = $class_name;
